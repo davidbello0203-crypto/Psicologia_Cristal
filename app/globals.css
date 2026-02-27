@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-primary: #0D6EFD;
+  --color-primary-light: #B8AFF0;
+  --color-primary-dark: #63BFEA;
+  --color-secondary: #A8D8EA;
+  --color-secondary-dark: #7CC4E0;
+  --color-accent: #F2A7B8;
+  --color-accent-dark: #E8809A;
+  --color-bg: #F4F2FF;
+  --color-surface: #FFFFFF;
+  --color-text: #2D2B3D;
+  --color-text-muted: #7A788F;
+  --color-lavender-soft: #E8E4FF;
+
+  /* Fonts */
+  --font-heading: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --background: #F4F2FF;
+  --foreground: #2D2B3D;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Triage form range slider thumb */
+.triage-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0D6EFD;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.45);
+  border: 2px solid white;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.triage-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 14px rgba(13, 110, 253, 0.55);
+}
+.triage-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0D6EFD;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.45);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-light);
+  border-radius: 3px;
+}
