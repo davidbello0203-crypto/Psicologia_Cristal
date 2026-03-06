@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { fadeInUp, staggerContainer, fadeIn, scaleIn } from '@/lib/motion'
 import { SITE_CONFIG } from '@/lib/constants'
 import { Sparkles, ArrowDown } from 'lucide-react'
@@ -165,39 +166,26 @@ export function HeroSection() {
             transition={{ delay: 0.3 }}
             className="relative flex justify-center items-center"
           >
-            {/* Main illustration card */}
+            {/* Photo card */}
             <div
-              className="relative w-80 h-80 sm:w-96 sm:h-96 rounded-3xl flex items-center justify-center overflow-hidden"
+              className="relative w-80 h-96 sm:w-96 sm:h-[480px] rounded-3xl overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #E8E4FF 0%, #D4F0F8 50%, #FFE4EC 100%)',
                 boxShadow: '0 20px 60px rgba(13,110,253,0.2)',
               }}
             >
-              {/* Decorative circles */}
+              <Image
+                src="/images/cristal.jpg"
+                alt="Cristal Hernández – Psicóloga"
+                fill
+                className="object-cover object-top"
+                priority
+              />
+              {/* Gradient overlay at bottom */}
               <div
-                className="absolute top-8 right-8 w-20 h-20 rounded-full opacity-60"
-                style={{ background: '#B8AFF0' }}
+                className="absolute bottom-0 left-0 right-0 h-24"
+                style={{ background: 'linear-gradient(to top, rgba(13,110,253,0.5) 0%, transparent 100%)' }}
                 aria-hidden="true"
               />
-              <div
-                className="absolute bottom-8 left-8 w-16 h-16 rounded-full opacity-40"
-                style={{ background: '#A8D8EA' }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full opacity-30"
-                style={{ background: '#F2A7B8' }}
-                aria-hidden="true"
-              />
-
-              {/* Psi symbol */}
-              <div
-                className="relative z-10 text-7xl font-bold select-none"
-                style={{ color: '#0D6EFD', opacity: 0.8, fontFamily: 'Georgia, serif' }}
-                aria-label="Símbolo de psicología"
-              >
-                Ψ
-              </div>
             </div>
 
             {/* Floating cards */}

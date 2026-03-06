@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, useInView } from 'framer-motion'
+import Image from 'next/image'
 import { useRef } from 'react'
 import { fadeInUp, fadeInLeft, fadeInRight, staggerContainer, inViewConfig } from '@/lib/motion'
 import { GraduationCap, Heart, Shield } from 'lucide-react'
@@ -27,33 +28,20 @@ export function SobreMiSection() {
             className="relative flex justify-center"
           >
             <div
-              className="relative w-72 h-72 sm:w-80 sm:h-80 rounded-3xl overflow-hidden"
+              className="relative w-72 h-80 sm:w-80 sm:h-96 rounded-3xl overflow-hidden"
               style={{
-                background: 'linear-gradient(145deg, #E8E4FF 0%, #D4EFF8 100%)',
                 boxShadow: '0 20px 60px rgba(13,110,253,0.15)',
               }}
             >
-              {/* Decorative elements */}
-              <div
-                className="absolute top-6 left-6 w-16 h-16 rounded-2xl opacity-60"
-                style={{ background: '#B8AFF0' }}
-                aria-hidden="true"
+              <Image
+                src="/images/cristal.jpg"
+                alt="Cristal Hernández – Psicóloga"
+                fill
+                className="object-cover object-top"
               />
-              <div
-                className="absolute bottom-10 right-6 w-12 h-12 rounded-xl opacity-50"
-                style={{ background: '#A8D8EA' }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl select-none"
-                style={{ color: '#0D6EFD', opacity: 0.5, fontFamily: 'Georgia, serif' }}
-                aria-hidden="true"
-              >
-                Ψ
-              </div>
               {/* Name overlay */}
               <div className="absolute bottom-0 left-0 right-0 p-4" style={{ background: 'linear-gradient(to top, rgba(13,110,253,0.8) 0%, transparent 100%)' }}>
-                <p className="text-white font-heading font-bold text-lg">Cristal Hernandez</p>
+                <p className="text-white font-heading font-bold text-lg">Cristal Hernández</p>
                 <p className="text-white/80 text-sm font-body">Psicóloga Clínica y Educativa</p>
               </div>
             </div>
