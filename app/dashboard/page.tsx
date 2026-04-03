@@ -183,17 +183,26 @@ export default function DashboardPage() {
   const handleCropSave = async (blob: Blob) => {
     if (!user) return
     setUploadingAvatar(true)
-    const path = `${user.id}/avatar.jpg`
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
-    if (!uploadError) {
+    try {
+      const path = `${user.id}/avatar.jpg`
+      const { error: uploadError } = await Promise.race([
+        supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' }),
+        new Promise<{ error: Error }>(resolve => setTimeout(() => resolve({ error: new Error('timeout') }), 15000)),
+      ]) as { error: Error | null }
+
+      if (uploadError) {
+        alert('Error al subir la foto: ' + uploadError.message)
+        return
+      }
+
       const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-      // Bust cache by appending timestamp
       const bustUrl = `${data.publicUrl}?t=${Date.now()}`
       await supabase.from('profiles').update({ avatar_url: bustUrl }).eq('id', user.id)
-      await refreshProfile()
+      refreshProfile() // fire and forget
+      setCropSrc(null)
+    } finally {
+      setUploadingAvatar(false)
     }
-    setUploadingAvatar(false)
-    setCropSrc(null)
   }
 
   const handleCancel = async (id: string) => {
