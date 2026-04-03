@@ -271,6 +271,13 @@ export default function AdminPage() {
   }, [supabase])
 
   useEffect(() => {
+    if (profile && profile.role !== 'admin') {
+      window.location.href = '/dashboard'
+    }
+  }, [profile])
+
+  useEffect(() => {
+    if (profile?.role !== 'admin') return
     fetchData()
     const channel = supabase
       .channel('admin-realtime')

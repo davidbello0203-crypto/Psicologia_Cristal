@@ -31,14 +31,7 @@ export default function LoginPage() {
         }
         return
       }
-      // Role-based redirect handled via middleware after session refresh
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', currentUser!.id)
-        .single()
-      window.location.href = profile?.role === 'admin' ? '/admin' : '/dashboard'
+      window.location.href = '/dashboard'
     } finally {
       setLoading(false)
     }

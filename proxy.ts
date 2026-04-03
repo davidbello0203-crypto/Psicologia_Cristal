@@ -31,28 +31,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Protected admin routes
+  // Protected admin routes — only check auth here, role is verified client-side
   if (pathname.startsWith('/admin')) {
     if (!user) return NextResponse.redirect(new URL('/login', request.url))
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
   }
 
   // Redirect logged-in users away from auth pages
   if ((pathname === '/login' || pathname === '/registro') && user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    const dest = profile?.role === 'admin' ? '/admin' : '/dashboard'
-    return NextResponse.redirect(new URL(dest, request.url))
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return supabaseResponse

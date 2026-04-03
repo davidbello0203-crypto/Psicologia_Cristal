@@ -156,6 +156,12 @@ export default function DashboardPage() {
   }, [user, supabase])
 
   useEffect(() => {
+    if (profile?.role === 'admin') {
+      window.location.href = '/admin'
+    }
+  }, [profile])
+
+  useEffect(() => {
     fetchAppointments()
     // Real-time updates
     const channel = supabase
