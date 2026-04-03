@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -11,13 +11,24 @@ import { useAuth } from '@/context/AuthContext'
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
+  const lastScrollY = useRef(0)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
+    const handleScroll = () => {
+      const currentY = window.scrollY
+      setScrolled(currentY > 20)
+      if (currentY > lastScrollY.current && currentY > 80) {
+        setHidden(true)
+      } else {
+        setHidden(false)
+      }
+      lastScrollY.current = currentY
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -32,8 +43,10 @@ export function Header() {
 
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <motion.header
+        animate={{ y: hidden ? -80 : 0 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
           scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-transparent'
         }`}
       >
@@ -203,7 +216,7 @@ export function Header() {
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-      </header>
+      </motion.header>
 
       {/* Mobile menu */}
       <AnimatePresence>
