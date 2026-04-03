@@ -223,6 +223,12 @@ export default function DashboardPage() {
     window.location.href = '/'
   }
 
+  // Block admins — redirect before rendering anything
+  if (profile?.role === 'admin') {
+    window.location.href = '/admin'
+    return null
+  }
+
   const upcoming = appointments.filter((a) => a.status === 'pending' || a.status === 'confirmed')
   const past = appointments.filter((a) => a.status === 'completed' || a.status === 'cancelled' || a.status === 'no_show')
   const nextAppt = upcoming[upcoming.length - 1]

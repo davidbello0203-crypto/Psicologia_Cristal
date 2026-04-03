@@ -31,7 +31,10 @@ export default function LoginPage() {
         }
         return
       }
-      window.location.href = '/dashboard'
+      const { data: { user: me } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase
+        .from('profiles').select('role').eq('id', me!.id).single()
+      window.location.href = profile?.role === 'admin' ? '/admin' : '/dashboard'
     } finally {
       setLoading(false)
     }
