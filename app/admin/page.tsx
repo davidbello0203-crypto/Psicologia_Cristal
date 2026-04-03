@@ -252,22 +252,25 @@ export default function AdminPage() {
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchData = useCallback(async () => {
-    const [{ data: appts }, { data: clientData }] = await Promise.all([
-      supabase
-        .from('appointments')
-        .select('*, profiles(*)')
-        .order('appointment_date', { ascending: true })
-        .order('start_time', { ascending: true }),
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'client')
-        .order('created_at', { ascending: false }),
-    ])
-    setAppointments((appts as AppointmentWithProfile[]) ?? [])
-    setClients(clientData ?? [])
-    setLoading(false)
-    setRefreshing(false)
+    try {
+      const [{ data: appts }, { data: clientData }] = await Promise.all([
+        supabase
+          .from('appointments')
+          .select('*, profiles(*)')
+          .order('appointment_date', { ascending: true })
+          .order('start_time', { ascending: true }),
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'client')
+          .order('created_at', { ascending: false }),
+      ])
+      setAppointments((appts as AppointmentWithProfile[]) ?? [])
+      setClients(clientData ?? [])
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
   }, [supabase])
 
   useEffect(() => {
