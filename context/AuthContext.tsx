@@ -31,12 +31,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   const fetchProfile = useCallback(async (userId: string) => {
+    // Try RPC first (bypasses RLS), fallback to direct query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rpcRole } = await (supabase as any).rpc('get_my_role')
     const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data)
+    if (data) {
+      setProfile(rpcRole ? { ...data, role: rpcRole } : data)
+    }
   }, [supabase])
 
   const refreshProfile = useCallback(async () => {

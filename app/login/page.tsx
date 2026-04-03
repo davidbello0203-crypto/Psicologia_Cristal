@@ -31,14 +31,8 @@ export default function LoginPage() {
         }
         return
       }
-      const { data: { user: me } } = await supabase.auth.getUser()
-      let role = 'client'
-      for (let i = 0; i < 3; i++) {
-        const { data: profile } = await supabase
-          .from('profiles').select('role').eq('id', me!.id).single()
-        if (profile?.role) { role = profile.role; break }
-        await new Promise(r => setTimeout(r, 500))
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: role } = await (supabase as any).rpc('get_my_role')
       window.location.href = role === 'admin' ? '/admin' : '/dashboard'
     } finally {
       setLoading(false)
