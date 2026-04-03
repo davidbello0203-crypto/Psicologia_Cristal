@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Calendar, Clock, Video, MapPin, LogOut, Plus, User,
   CheckCircle2, XCircle, AlertCircle, ChevronRight,
-  Sparkles, Heart, Phone, MessageCircle, Camera, Loader2,
+  Sparkles, Heart, Phone, MessageCircle, Camera, Loader2, Bell, X,
 } from 'lucide-react'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -144,6 +144,7 @@ export default function DashboardPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [signingOut, setSigningOut] = useState(false)
+  const [notifications, setNotifications] = useState<{ id: string; title: string; message: string }[]>([])
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
@@ -157,6 +158,22 @@ export default function DashboardPage() {
     setLoading(false)
   }, [user, supabase])
 
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, title, message')
+      .eq('user_id', user.id)
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+    setNotifications(data ?? [])
+  }, [user, supabase])
+
+  const dismissNotification = async (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+  }
+
   useEffect(() => {
     if (profile?.role === 'admin') {
       window.location.href = '/admin'
@@ -167,6 +184,7 @@ export default function DashboardPage() {
     if (!user || !profile) return   // esperar a que carguen ambos
     if (profile.role === 'admin') return  // el otro effect redirige
     fetchAppointments()
+    fetchNotifications()
     const channel = supabase
       .channel('client-appointments')
       .on('postgres_changes', {
@@ -175,9 +193,15 @@ export default function DashboardPage() {
         table: 'appointments',
         filter: `client_id=eq.${user?.id}`,
       }, () => fetchAppointments())
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user?.id}`,
+      }, () => fetchNotifications())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [user, profile, fetchAppointments, supabase])
+  }, [user, profile, fetchAppointments, fetchNotifications, supabase])
 
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -273,6 +297,40 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {/* Notificaciones */}
+        <AnimatePresence>
+          {notifications.map(n => (
+            <motion.div
+              key={n.id}
+              initial={{ opacity: 0, y: -12, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: 'rgba(242,167,184,0.12)', border: '1.5px solid rgba(242,167,184,0.4)' }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(242,167,184,0.2)' }}>
+                  <Bell size={15} style={{ color: '#C07A8A' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold" style={{ color: '#2D2B3D' }}>{n.title}</p>
+                  <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#7A788F' }}>{n.message}</p>
+                  <button
+                    onClick={() => { dismissNotification(n.id); setShowBooking(true) }}
+                    className="mt-2 text-xs font-semibold cursor-pointer"
+                    style={{ color: '#0D6EFD' }}
+                  >
+                    Reagendar en línea →
+                  </button>
+                </div>
+                <button onClick={() => dismissNotification(n.id)} className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer flex-shrink-0" style={{ background: 'rgba(192,122,138,0.15)' }}>
+                  <X size={12} style={{ color: '#C07A8A' }} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
         {/* Welcome banner */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}

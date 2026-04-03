@@ -2,26 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronLeft, ChevronRight, Calendar, Clock, Video, MapPin, CheckCircle2, Loader2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Calendar, Clock, Video, MapPin, CheckCircle2, Loader2, WifiOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 
 const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-// 9:00 AM – 9:00 PM, 1-hour slots (last starts at 21:00, ends 22:00)
-const START_HOUR = 9
-const END_HOUR = 22  // exclusive — last slot starts at 21:00
-
-function generateSlots(): string[] {
-  const slots: string[] = []
-  for (let h = START_HOUR; h < END_HOUR; h++) {
-    slots.push(`${String(h).padStart(2, '0')}:00`)
-  }
-  return slots
-}
-
-const ALL_SLOTS = generateSlots()
+// Lunes a Viernes: Matutino 9-14, Vespertino 18-21
+const ALL_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','18:00','19:00','20:00','21:00']
 
 function formatSlot(time: string) {
   const [h] = time.split(':').map(Number)
@@ -30,15 +19,13 @@ function formatSlot(time: string) {
   return `${displayH}:00 ${ampm}`
 }
 
-// Available Mon–Sat (1–6), closed Sunday (0)
+// Solo Lunes–Viernes (1–5)
 function isDayAvailable(date: Date, today: Date): boolean {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  const t = new Date(today)
-  t.setHours(0, 0, 0, 0)
+  const d = new Date(date); d.setHours(0, 0, 0, 0)
+  const t = new Date(today); t.setHours(0, 0, 0, 0)
   if (d < t) return false
   const dow = date.getDay()
-  return dow >= 1 && dow <= 6
+  return dow >= 1 && dow <= 5
 }
 
 interface Props {
@@ -62,6 +49,17 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [presencialEnabled, setPresencialEnabled] = useState<boolean | null>(null)
+
+  // Cargar estado presencial
+  useEffect(() => {
+    supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single()
+      .then(({ data }) => {
+        const enabled = data?.value === true || data?.value === 'true'
+        setPresencialEnabled(enabled)
+        if (!enabled) setModality('online')
+      })
+  }, [supabase])
 
   const fetchBooked = useCallback(async (date: string) => {
     setLoadingSlots(true)
@@ -79,7 +77,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
     if (selectedDate) fetchBooked(selectedDate)
   }, [selectedDate, fetchBooked])
 
-  // Real-time: refresh slots when anyone books
+  // Real-time: refresh slots cuando alguien agenda
   useEffect(() => {
     if (!selectedDate) return
     const channel = supabase
@@ -94,8 +92,8 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
   const handleSubmit = async () => {
     if (!selectedDate || !selectedSlot || !user) return
     setSubmitting(true)
-    const [h] = selectedSlot.split(':').map(Number)
-    const endTime = `${String(h + 1).padStart(2, '0')}:00:00`
+    const slotHour = parseInt(selectedSlot.split(':')[0])
+    const endTime = `${String(slotHour + 1).padStart(2, '0')}:00:00`
 
     const { error } = await supabase.from('appointments').insert({
       client_id: user.id,
@@ -124,6 +122,10 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
 
   const price = isFirstSession ? 140 : 200
 
+  // Separar slots en matutino y vespertino
+  const morningSlots = ALL_SLOTS.filter(s => parseInt(s) < 15)
+  const eveningSlots = ALL_SLOTS.filter(s => parseInt(s) >= 15)
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -137,7 +139,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
-        transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.4 }}
+        transition={{ ease: [0.22, 1, 0.36, 1] as [number,number,number,number], duration: 0.4 }}
         className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl"
         style={{ background: 'white', boxShadow: '0 24px 64px rgba(13,110,253,0.2)' }}
       >
@@ -160,9 +162,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
                 <CheckCircle2 size={32} style={{ color: '#0D6EFD' }} />
               </div>
               <h3 className="font-heading text-xl font-bold" style={{ color: '#2D2B3D' }}>¡Cita reservada!</h3>
-              <p className="text-sm" style={{ color: '#7A788F' }}>
-                Cristal confirmará tu cita pronto.
-              </p>
+              <p className="text-sm" style={{ color: '#7A788F' }}>Cristal confirmará tu cita pronto.</p>
             </motion.div>
           ) : (
             <>
@@ -180,7 +180,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
               {/* Info */}
               <div className="flex items-center gap-2 text-xs" style={{ color: '#7A788F' }}>
                 <Clock size={12} style={{ color: '#B8AFF0' }} />
-                Lunes a Sábado · 9:00 AM – 10:00 PM · Sesiones de 1 hora
+                Lunes a Viernes · Mat. 9–14 h · Vesp. 18–21 h · Sesiones de 1 hora
               </div>
 
               {/* Calendar */}
@@ -193,9 +193,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
                   >
                     <ChevronLeft size={16} style={{ color: '#7A788F' }} />
                   </button>
-                  <span className="text-sm font-bold" style={{ color: '#2D2B3D' }}>
-                    {MONTHS[calMonth]} {calYear}
-                  </span>
+                  <span className="text-sm font-bold" style={{ color: '#2D2B3D' }}>{MONTHS[calMonth]} {calYear}</span>
                   <button
                     onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) } else setCalMonth(m => m + 1) }}
                     className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
@@ -250,27 +248,59 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
                       <Loader2 size={20} className="animate-spin" style={{ color: '#B8AFF0' }} />
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {ALL_SLOTS.map((slot) => {
-                        const taken = bookedSlots.includes(slot)
-                        const sel = selectedSlot === slot
-                        return (
-                          <button
-                            key={slot}
-                            onClick={() => !taken && setSelectedSlot(slot)}
-                            disabled={taken}
-                            className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer disabled:cursor-default"
-                            style={{
-                              background: sel ? '#0D6EFD' : taken ? '#F3F4F6' : 'rgba(13,110,253,0.06)',
-                              color: sel ? 'white' : taken ? '#D1D5DB' : '#0D6EFD',
-                              border: sel ? '1.5px solid #0D6EFD' : '1.5px solid rgba(13,110,253,0.15)',
-                              textDecoration: taken ? 'line-through' : 'none',
-                            }}
-                          >
-                            {formatSlot(slot)}
-                          </button>
-                        )
-                      })}
+                    <div className="space-y-3">
+                      {/* Matutino */}
+                      <div>
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>Matutino</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {morningSlots.map((slot) => {
+                            const taken = bookedSlots.includes(slot)
+                            const sel = selectedSlot === slot
+                            return (
+                              <button
+                                key={slot}
+                                onClick={() => !taken && setSelectedSlot(slot)}
+                                disabled={taken}
+                                className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer disabled:cursor-default"
+                                style={{
+                                  background: sel ? '#0D6EFD' : taken ? '#F3F4F6' : 'rgba(13,110,253,0.06)',
+                                  color: sel ? 'white' : taken ? '#D1D5DB' : '#0D6EFD',
+                                  border: sel ? '1.5px solid #0D6EFD' : '1.5px solid rgba(13,110,253,0.15)',
+                                  textDecoration: taken ? 'line-through' : 'none',
+                                }}
+                              >
+                                {formatSlot(slot)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      {/* Vespertino */}
+                      <div>
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>Vespertino</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {eveningSlots.map((slot) => {
+                            const taken = bookedSlots.includes(slot)
+                            const sel = selectedSlot === slot
+                            return (
+                              <button
+                                key={slot}
+                                onClick={() => !taken && setSelectedSlot(slot)}
+                                disabled={taken}
+                                className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer disabled:cursor-default"
+                                style={{
+                                  background: sel ? '#0D6EFD' : taken ? '#F3F4F6' : 'rgba(13,110,253,0.06)',
+                                  color: sel ? 'white' : taken ? '#D1D5DB' : '#0D6EFD',
+                                  border: sel ? '1.5px solid #0D6EFD' : '1.5px solid rgba(13,110,253,0.15)',
+                                  textDecoration: taken ? 'line-through' : 'none',
+                                }}
+                              >
+                                {formatSlot(slot)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -280,22 +310,79 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
               <div>
                 <p className="text-sm font-semibold mb-2" style={{ color: '#2D2B3D' }}>Modalidad</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {(['online', 'presencial'] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setModality(m)}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer"
+                  {/* Online — siempre disponible */}
+                  <button
+                    onClick={() => setModality('online')}
+                    className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer"
+                    style={{
+                      background: modality === 'online' ? 'rgba(13,110,253,0.08)' : '#F9F9FF',
+                      border: `1.5px solid ${modality === 'online' ? '#0D6EFD' : 'rgba(184,175,240,0.3)'}`,
+                      color: modality === 'online' ? '#0D6EFD' : '#7A788F',
+                    }}
+                  >
+                    <Video size={15} />
+                    En línea
+                  </button>
+
+                  {/* Presencial — animación si está desactivado */}
+                  {presencialEnabled === false ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl text-xs text-center px-2"
                       style={{
-                        background: modality === m ? 'rgba(13,110,253,0.08)' : '#F9F9FF',
-                        border: `1.5px solid ${modality === m ? '#0D6EFD' : 'rgba(184,175,240,0.3)'}`,
-                        color: modality === m ? '#0D6EFD' : '#7A788F',
+                        background: 'rgba(242,167,184,0.1)',
+                        border: '1.5px solid rgba(242,167,184,0.35)',
+                        color: '#C07A8A',
                       }}
                     >
-                      {m === 'online' ? <Video size={15} /> : <MapPin size={15} />}
-                      {m === 'online' ? 'En línea' : 'Presencial'}
+                      <WifiOff size={14} style={{ color: '#F2A7B8' }} />
+                      <span className="font-semibold leading-tight">No disponible</span>
+                      <span style={{ color: '#C07A8A', opacity: 0.8 }}>Solo en línea por ahora</span>
+                    </motion.div>
+                  ) : (
+                    <button
+                      onClick={() => setModality('presencial')}
+                      className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer"
+                      style={{
+                        background: modality === 'presencial' ? 'rgba(13,110,253,0.08)' : '#F9F9FF',
+                        border: `1.5px solid ${modality === 'presencial' ? '#0D6EFD' : 'rgba(184,175,240,0.3)'}`,
+                        color: modality === 'presencial' ? '#0D6EFD' : '#7A788F',
+                      }}
+                    >
+                      <MapPin size={15} />
+                      Presencial
                     </button>
-                  ))}
+                  )}
                 </div>
+
+                {/* Banner informativo cuando presencial está desactivado */}
+                <AnimatePresence>
+                  {presencialEnabled === false && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 px-4 py-3 rounded-2xl flex items-start gap-3" style={{ background: 'rgba(242,167,184,0.12)', border: '1.5px solid rgba(242,167,184,0.3)' }}>
+                        <motion.span
+                          animate={{ rotate: [0, -10, 10, -10, 0] }}
+                          transition={{ repeat: Infinity, repeatDelay: 3, duration: 0.5 }}
+                          className="text-lg flex-shrink-0"
+                        >
+                          ✈️
+                        </motion.span>
+                        <div>
+                          <p className="text-xs font-bold" style={{ color: '#2D2B3D' }}>Cristal está fuera por el momento</p>
+                          <p className="text-xs mt-0.5" style={{ color: '#7A788F' }}>
+                            Las sesiones presenciales no están disponibles, pero puedes agendar en línea con la misma calidad de atención.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Reason */}

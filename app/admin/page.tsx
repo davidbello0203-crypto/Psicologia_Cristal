@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import type { Appointment, Profile, ClinicalNote } from '@/types/database'
 import { AppointmentCalendar } from '@/components/dashboard/AppointmentCalendar'
+import { PresencialToggle } from '@/components/admin/PresencialToggle'
 
 type AppointmentWithProfile = Appointment & { profiles: Profile }
 
@@ -355,6 +356,9 @@ export default function AdminPage() {
           <StatCard icon={DollarSign} label="Ingresos mes" value={`$${monthRevenue}`} sub="MXN completadas" color="#10B981" />
           <StatCard icon={Users} label="Clientes" value={clients.length} sub="Registrados" color="#B8AFF0" />
         </div>
+
+        {/* Modo de atención */}
+        <PresencialToggle />
 
         {/* Calendar */}
         <AppointmentCalendar
