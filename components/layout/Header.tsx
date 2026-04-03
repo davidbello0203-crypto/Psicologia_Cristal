@@ -17,12 +17,14 @@ export function Header() {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
   const lastScrollY = useRef(0)
+  const userRef = useRef(user)
+  useEffect(() => { userRef.current = user }, [user])
 
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY
       setScrolled(currentY > 20)
-      if (currentY > lastScrollY.current && currentY > 80) {
+      if (currentY > lastScrollY.current && currentY > 80 && !userRef.current) {
         setHidden(true)
       } else {
         setHidden(false)
@@ -177,12 +179,12 @@ export function Header() {
           </nav>
 
           {/* RIGHT: CTA */}
-          <div className="hidden md:flex items-center flex-shrink-0">
+          <div className="flex items-center flex-shrink-0">
             {!loading && user && (
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   href={dashboardHref}
-                  className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body font-semibold text-white overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                  className="relative inline-flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-body font-semibold text-white overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                   style={{
                     background: 'linear-gradient(135deg, #0D6EFD 0%, #9E94DF 100%)',
                     boxShadow: '0 4px 18px rgba(13,110,253,0.35)',
