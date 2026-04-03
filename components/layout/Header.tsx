@@ -38,7 +38,7 @@ export function Header() {
   const handleSignOut = async () => {
     await signOut()
     setUserMenuOpen(false)
-    router.push('/')
+    window.location.href = '/'
   }
 
   const dashboardHref = profile?.role === 'admin' ? '/admin' : '/dashboard'

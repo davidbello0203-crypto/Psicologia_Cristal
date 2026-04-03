@@ -204,7 +204,7 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => {
     await signOut()
-    router.push('/')
+    window.location.href = '/'
   }
 
   const upcoming = appointments.filter((a) => a.status === 'pending' || a.status === 'confirmed')
@@ -230,18 +230,18 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-xs font-medium hidden sm:block" style={{ color: '#7A788F' }}>
-            Volver al sitio
+          <Link href="/" className="text-xs font-medium" style={{ color: '#7A788F' }}>
+            ← Inicio
           </Link>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-xs font-medium cursor-pointer px-3 py-2 rounded-xl transition-colors"
-            style={{ color: '#7A788F' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#F4F2FF')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer px-3 py-2 rounded-xl transition-colors border"
+            style={{ color: '#C04A4A', borderColor: 'rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.05)')}
           >
             <LogOut size={14} />
-            Salir
+            Cerrar sesión
           </button>
         </div>
       </header>
