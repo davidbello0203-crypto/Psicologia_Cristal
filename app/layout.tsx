@@ -37,16 +37,26 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_MX',
+    url: 'https://tuespacioconcristal.space',
     title: 'Psic. Cristal Hernandez | Psicóloga',
     description:
       'Espacio seguro y sin prejuicios para tu bienestar emocional. Atención psicológica individual en línea y presencial.',
     siteName: 'Cristal Hernandez Psicóloga',
+    images: [
+      {
+        url: 'https://tuespacioconcristal.space/images/cristal.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Psic. Cristal Hernandez - Psicóloga',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Psic. Cristal Hernandez | Psicóloga',
     description:
       'Espacio seguro y sin prejuicios para tu bienestar emocional.',
+    images: ['https://tuespacioconcristal.space/images/cristal.jpg'],
   },
   robots: {
     index: true,
