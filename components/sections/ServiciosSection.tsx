@@ -18,6 +18,12 @@ export function ServiciosSection() {
     'Prevención de recaídas',
   ]
 
+  const packages = [
+    { label: 'Sesión individual', price: '$200', unit: 'por sesión', highlight: false, tag: null },
+    { label: 'Paquete 4 sesiones', price: '$700', unit: '$175 c/u · Ahorra $100', highlight: true, tag: 'Más popular' },
+    { label: 'Paquete 8 sesiones', price: '$1,300', unit: '$162 c/u · Ahorra $300', highlight: false, tag: 'Mejor valor' },
+  ]
+
   const specialties = [
     'Ansiedad y Estrés',
     'Depresión',
@@ -147,6 +153,55 @@ export function ServiciosSection() {
                 Agendar mi sesión
               </a>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Pricing packages */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          className="mb-16"
+        >
+          <motion.h3
+            variants={fadeInUp}
+            className="text-center font-heading text-xl font-semibold mb-6"
+            style={{ color: '#2D2B3D' }}
+          >
+            Planes y precios
+          </motion.h3>
+          <motion.p
+            variants={fadeInUp}
+            className="text-center text-sm mb-8 max-w-md mx-auto"
+            style={{ color: '#7A788F' }}
+          >
+            Primera sesión con <strong>30% de descuento</strong> ($140 MXN). Los paquetes te permiten continuar tu proceso con mejor precio.
+          </motion.p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+            {packages.map(({ label, price, unit, highlight, tag }) => (
+              <motion.div
+                key={label}
+                variants={fadeInUp}
+                className="relative rounded-2xl p-5 text-center"
+                style={{
+                  background: highlight ? 'linear-gradient(145deg, #0D6EFD, #9B8FE0)' : 'white',
+                  border: highlight ? 'none' : '1.5px solid rgba(184,175,240,0.3)',
+                  boxShadow: highlight ? '0 12px 40px rgba(13,110,253,0.25)' : '0 2px 12px rgba(13,110,253,0.06)',
+                }}
+              >
+                {tag && (
+                  <span
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                    style={{ background: highlight ? '#F2A7B8' : '#B8AFF0', color: 'white' }}
+                  >
+                    {tag}
+                  </span>
+                )}
+                <p className="text-sm font-semibold mb-2" style={{ color: highlight ? 'rgba(255,255,255,0.85)' : '#7A788F' }}>{label}</p>
+                <p className="text-3xl font-heading font-bold mb-1" style={{ color: highlight ? 'white' : '#2D2B3D' }}>{price}</p>
+                <p className="text-xs" style={{ color: highlight ? 'rgba(255,255,255,0.7)' : '#9CA3AF' }}>MXN · {unit}</p>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
 

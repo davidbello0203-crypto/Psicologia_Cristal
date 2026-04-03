@@ -17,7 +17,6 @@ export const NAV_LINKS = [
   { label: 'Servicios', href: '#servicios' },
   { label: 'Formación', href: '#formacion' },
   { label: 'Agendar', href: '#consulta' },
-  { label: 'Contacto', href: '#contacto' },
 ]
 
 export interface Service {
@@ -35,7 +34,7 @@ export const SERVICES: Service[] = [
     title: 'Atención Psicológica',
     subtitle: 'Cualquier Modalidad',
     duration: '45 - 60 minutos',
-    price: 'Consulta para precio',
+    price: '$200 MXN por sesión',
     promo: '30% en tu primera sesión',
     features: [
       'Historial Clínico completo',

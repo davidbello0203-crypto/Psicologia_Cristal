@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 interface LogoProps {
   className?: string
   size?: 'sm' | 'md' | 'lg'
@@ -7,9 +9,9 @@ interface LogoProps {
 
 export function Logo({ className = '', size = 'md' }: LogoProps) {
   const sizes = {
-    sm: { container: 'w-8 h-8 text-xs', text: 'text-sm' },
-    md: { container: 'w-10 h-10 text-sm', text: 'text-base' },
-    lg: { container: 'w-14 h-14 text-base', text: 'text-xl' },
+    sm: { container: 'w-8 h-8', text: 'text-sm' },
+    md: { container: 'w-10 h-10', text: 'text-base' },
+    lg: { container: 'w-14 h-14', text: 'text-xl' },
   }
 
   const s = sizes[size]
@@ -17,19 +19,15 @@ export function Logo({ className = '', size = 'md' }: LogoProps) {
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <div
-        className={`${s.container} rounded-xl flex items-center justify-center font-bold text-white relative overflow-hidden`}
-        style={{ background: 'linear-gradient(135deg, #0D6EFD 0%, #B8AFF0 100%)' }}
-        aria-hidden="true"
+        className={`${s.container} rounded-xl overflow-hidden flex-shrink-0 relative`}
+        style={{ boxShadow: '0 2px 8px rgba(13,110,253,0.2)' }}
       >
-        <span className="relative z-10 font-heading tracking-tight">
-          CH
-        </span>
-        <span
-          className="absolute -bottom-1 -right-1 text-white/20 font-bold"
-          style={{ fontSize: '1.4em' }}
-        >
-          Ψ
-        </span>
+        <Image
+          src="/images/cristal.jpg"
+          alt="Cristal Hernandez"
+          fill
+          className="object-cover object-top"
+        />
       </div>
       <div className="flex flex-col leading-none">
         <span

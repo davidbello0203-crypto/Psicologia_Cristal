@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
+import { AuthProvider } from '@/context/AuthContext'
 import './globals.css'
 
 const inter = Inter({
@@ -64,7 +65,9 @@ export default function RootLayout({
         <meta name="theme-color" content="#0D6EFD" />
       </head>
       <body className="antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

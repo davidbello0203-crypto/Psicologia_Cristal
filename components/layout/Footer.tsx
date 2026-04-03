@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Instagram, Phone, Heart } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { NAV_LINKS, SITE_CONFIG } from '@/lib/constants'
@@ -21,10 +22,10 @@ export function Footer() {
             <div className="mb-4">
               <div className="flex items-center gap-2.5">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white relative overflow-hidden text-sm"
-                  style={{ background: 'linear-gradient(135deg, #0D6EFD 0%, #B8AFF0 100%)' }}
+                  className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 relative"
+                  style={{ boxShadow: '0 2px 8px rgba(13,110,253,0.2)' }}
                 >
-                  CH
+                  <Image src="/images/cristal.jpg" alt="Cristal Hernandez" fill className="object-cover object-top" />
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="font-heading font-bold text-white text-base">
@@ -169,24 +170,9 @@ export function Footer() {
             Hecho con <Heart size={11} className="inline" style={{ color: '#F2A7B8' }} aria-hidden="true" /> para el bienestar emocional &mdash; &copy; {new Date().getFullYear()} Cristal Hernandez
           </p>
           <div className="flex items-center gap-4">
-            <a
-              href="#"
-              className="text-xs transition-colors duration-200 cursor-pointer"
-              style={{ color: '#7A788F' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#B8AFF0')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#7A788F')}
-            >
-              Aviso de Privacidad
-            </a>
-            <a
-              href="#"
-              className="text-xs transition-colors duration-200 cursor-pointer"
-              style={{ color: '#7A788F' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#B8AFF0')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#7A788F')}
-            >
-              Términos de Uso
-            </a>
+            <span className="text-xs" style={{ color: '#7A788F' }}>
+              Sesión desde $200 MXN
+            </span>
           </div>
         </div>
       </div>
