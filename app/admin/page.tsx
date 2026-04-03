@@ -277,14 +277,15 @@ export default function AdminPage() {
   }, [profile])
 
   useEffect(() => {
-    if (profile?.role !== 'admin') return
+    if (!profile) return           // aún cargando, esperar
+    if (profile.role !== 'admin') return  // no es admin, el otro effect redirige
     fetchData()
     const channel = supabase
       .channel('admin-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, fetchData)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [fetchData, supabase])
+  }, [fetchData, supabase, profile])
 
   const handleStatusChange = async (id: string, status: string) => {
     await supabase.from('appointments').update({ status, updated_at: new Date().toISOString() }).eq('id', id)

@@ -162,8 +162,9 @@ export default function DashboardPage() {
   }, [profile])
 
   useEffect(() => {
+    if (!user || !profile) return   // esperar a que carguen ambos
+    if (profile.role === 'admin') return  // el otro effect redirige
     fetchAppointments()
-    // Real-time updates
     const channel = supabase
       .channel('client-appointments')
       .on('postgres_changes', {
@@ -174,7 +175,7 @@ export default function DashboardPage() {
       }, () => fetchAppointments())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [user, fetchAppointments, supabase])
+  }, [user, profile, fetchAppointments, supabase])
 
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
