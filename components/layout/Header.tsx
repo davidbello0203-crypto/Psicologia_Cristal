@@ -55,8 +55,7 @@ export function Header() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
 
           {/* LEFT: User widget */}
-          {!loading && (
-            user ? (
+          {user ? (
               /* Logged in — avatar + name + dropdown */
               <div className="relative flex-shrink-0">
                 <button
@@ -160,7 +159,7 @@ export function Header() {
                 </span>
               </Link>
             )
-          )}
+          }
 
           {/* CENTER: Nav */}
           <nav className="hidden md:flex items-center gap-8 flex-1 justify-center" role="navigation" aria-label="Navegación principal">
@@ -180,7 +179,7 @@ export function Header() {
 
           {/* RIGHT: CTA */}
           <div className="flex items-center flex-shrink-0">
-            {!loading && user && (
+            {user && (
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   href={dashboardHref}
@@ -201,7 +200,7 @@ export function Header() {
                 </Link>
               </motion.div>
             )}
-            {!loading && !user && (
+            {!user && (
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.96 }}
@@ -265,8 +264,7 @@ export function Header() {
                 </a>
               ))}
               <div className="pt-2 border-t flex flex-col gap-3" style={{ borderColor: 'rgba(184,175,240,0.2)' }}>
-                {!loading && (
-                  user ? (
+                {user ? (
                     <>
                       <Link
                         href={dashboardHref}
@@ -303,8 +301,7 @@ export function Header() {
                         Iniciar sesión
                       </Link>
                     </>
-                  )
-                )}
+                  )}
               </div>
             </nav>
           </motion.div>
