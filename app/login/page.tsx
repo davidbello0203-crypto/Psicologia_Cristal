@@ -92,11 +92,20 @@ export default function LoginPage() {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl mb-5 text-sm"
+                className="px-4 py-3 rounded-xl mb-5 text-sm"
                 style={{ background: 'rgba(192,74,74,0.08)', border: '1px solid rgba(192,74,74,0.2)', color: '#C04A4A' }}
               >
-                <AlertCircle size={15} className="flex-shrink-0" />
-                {error}
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={15} className="flex-shrink-0" />
+                  {error}
+                </div>
+                <Link
+                  href="/registro"
+                  className="inline-flex items-center gap-1 mt-2 font-semibold underline"
+                  style={{ color: '#0D6EFD' }}
+                >
+                  ¿No tienes cuenta? Regístrate →
+                </Link>
               </motion.div>
             )}
 

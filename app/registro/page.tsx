@@ -30,6 +30,7 @@ export default function RegistroPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [pwFocused, setPwFocused] = useState(false)
   const [error, setError] = useState('')
+  const [emailExists, setEmailExists] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
@@ -55,11 +56,15 @@ export default function RegistroPage() {
         options: { data: { full_name: form.fullName, phone: form.phone } },
       })
       if (error) {
-        setError(error.message.includes('already registered')
-          ? 'Este correo ya está registrado. Intenta iniciar sesión.'
-          : error.message)
+        if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+          setEmailExists(true)
+          setError('Este correo ya tiene una cuenta.')
+        } else {
+          setError(error.message)
+        }
         return
       }
+      setEmailExists(false)
       setSuccess(true)
       setTimeout(() => router.push('/dashboard'), 2000)
     } finally {
@@ -136,11 +141,22 @@ export default function RegistroPage() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="flex items-center gap-2 px-4 py-3 rounded-xl mb-5 text-sm"
+                      className="px-4 py-3 rounded-xl mb-5 text-sm"
                       style={{ background: 'rgba(192,74,74,0.08)', border: '1px solid rgba(192,74,74,0.2)', color: '#C04A4A' }}
                     >
-                      <AlertCircle size={15} className="flex-shrink-0" />
-                      {error}
+                      <div className="flex items-center gap-2">
+                        <AlertCircle size={15} className="flex-shrink-0" />
+                        {error}
+                      </div>
+                      {emailExists && (
+                        <Link
+                          href="/login"
+                          className="inline-flex items-center gap-1 mt-2 font-semibold underline"
+                          style={{ color: '#0D6EFD' }}
+                        >
+                          Ir a iniciar sesión →
+                        </Link>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
