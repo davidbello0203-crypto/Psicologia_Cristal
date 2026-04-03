@@ -32,9 +32,14 @@ export default function LoginPage() {
         return
       }
       const { data: { user: me } } = await supabase.auth.getUser()
-      const { data: profile } = await supabase
-        .from('profiles').select('role').eq('id', me!.id).single()
-      window.location.href = profile?.role === 'admin' ? '/admin' : '/dashboard'
+      let role = 'client'
+      for (let i = 0; i < 3; i++) {
+        const { data: profile } = await supabase
+          .from('profiles').select('role').eq('id', me!.id).single()
+        if (profile?.role) { role = profile.role; break }
+        await new Promise(r => setTimeout(r, 500))
+      }
+      window.location.href = role === 'admin' ? '/admin' : '/dashboard'
     } finally {
       setLoading(false)
     }
