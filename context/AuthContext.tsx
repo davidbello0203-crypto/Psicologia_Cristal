@@ -72,8 +72,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, fetchProfile])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
     setProfile(null)
+    setUser(null)
+    setSession(null)
+    supabase.auth.signOut() // fire and forget — don't block UI
   }
 
   return (

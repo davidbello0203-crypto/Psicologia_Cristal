@@ -284,7 +284,7 @@ export default function AdminPage() {
     fetchData()
   }
 
-  const handleSignOut = async () => { await signOut(); router.push('/') }
+  const handleSignOut = () => { signOut(); window.location.href = '/' }
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayAppts = appointments.filter((a) => a.appointment_date === todayStr)

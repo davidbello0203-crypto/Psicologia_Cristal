@@ -202,8 +202,8 @@ export default function DashboardPage() {
     fetchAppointments()
   }
 
-  const handleSignOut = async () => {
-    await signOut()
+  const handleSignOut = () => {
+    signOut()
     window.location.href = '/'
   }
 
