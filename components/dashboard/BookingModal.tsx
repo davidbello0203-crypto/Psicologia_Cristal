@@ -54,7 +54,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
   // Cargar estado presencial
   useEffect(() => {
     ;(supabase as any).from('app_settings').select('value').eq('key', 'presencial_enabled').single()
-      .then(({ data }) => {
+      .then(({ data }: { data: { value: unknown } | null }) => {
         const enabled = data?.value === true || data?.value === 'true'
         setPresencialEnabled(enabled)
         if (!enabled) setModality('online')
