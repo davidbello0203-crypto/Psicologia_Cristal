@@ -1,15 +1,29 @@
 'use client'
 
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { fadeInUp, staggerContainer, scaleIn, inViewConfig } from '@/lib/motion'
-import { Brain, Clock, CheckCircle2, Sparkles, MessageCircle } from 'lucide-react'
-import { SITE_CONFIG } from '@/lib/constants'
+import { Brain, Clock, CheckCircle2, Sparkles, CalendarPlus } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { createClient } from '@/lib/supabase/client'
+import { BookingModal } from '@/components/dashboard/BookingModal'
 
 export function ServiciosSection() {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, inViewConfig)
-  const whatsappUrl = `https://wa.me/${SITE_CONFIG.whatsapp}?text=Hola%20Cristal%2C%20me%20gustar%C3%ADa%20agendar%20una%20sesi%C3%B3n.`
+  const { user } = useAuth()
+  const router = useRouter()
+  const supabase = createClient()
+  const [showModal, setShowModal] = useState(false)
+  const [isFirstSession, setIsFirstSession] = useState(false)
+
+  const handleAgendar = async () => {
+    if (!user) { router.push('/registro'); return }
+    const { data } = await supabase.from('appointments').select('id').eq('client_id', user.id).limit(1)
+    setIsFirstSession(!data || data.length === 0)
+    setShowModal(true)
+  }
 
   const features = [
     'Historial Clínico completo',
@@ -38,6 +52,7 @@ export function ServiciosSection() {
   ]
 
   return (
+    <>
     <section
       id="servicios"
       ref={ref}
@@ -134,24 +149,16 @@ export function ServiciosSection() {
               </div>
 
               {/* CTA */}
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-full font-body font-semibold text-base transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
-                style={{ background: 'white', color: '#0D6EFD' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+              <motion.button
+                onClick={handleAgendar}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-full font-body font-semibold text-base cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
+                style={{ background: 'white', color: '#0D6EFD', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
               >
-                <MessageCircle size={18} aria-hidden="true" />
+                <CalendarPlus size={18} aria-hidden="true" />
                 Agendar mi sesión
-              </a>
+              </motion.button>
             </div>
           </div>
         </motion.div>
@@ -249,5 +256,16 @@ export function ServiciosSection() {
         </motion.div>
       </div>
     </section>
+
+      <AnimatePresence>
+        {showModal && (
+          <BookingModal
+            onClose={() => setShowModal(false)}
+            onSuccess={() => setShowModal(false)}
+            isFirstSession={isFirstSession}
+          />
+        )}
+      </AnimatePresence>
+    </>
   )
 }
