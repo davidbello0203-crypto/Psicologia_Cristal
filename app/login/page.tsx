@@ -38,8 +38,7 @@ export default function LoginPage() {
         .select('role')
         .eq('id', currentUser!.id)
         .single()
-      router.push(profile?.role === 'admin' ? '/admin' : '/dashboard')
-      router.refresh()
+      window.location.href = profile?.role === 'admin' ? '/admin' : '/dashboard'
     } finally {
       setLoading(false)
     }
