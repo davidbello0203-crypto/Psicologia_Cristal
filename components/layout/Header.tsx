@@ -14,6 +14,7 @@ export function Header() {
   const [hidden, setHidden] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
   const lastScrollY = useRef(0)
@@ -36,6 +37,7 @@ export function Header() {
   }, [])
 
   const handleSignOut = async () => {
+    setSigningOut(true)
     setUserMenuOpen(false)
     await signOut()
     window.location.href = '/'
@@ -123,13 +125,14 @@ export function Header() {
                       </Link>
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-150 cursor-pointer"
+                        disabled={signingOut}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-150 cursor-pointer disabled:opacity-60"
                         style={{ color: '#C04A4A' }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = '#FFF5F5')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                       >
                         <LogOut size={15} />
-                        Cerrar sesión
+                        {signingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
                       </button>
                     </motion.div>
                   )}

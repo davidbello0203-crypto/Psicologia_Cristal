@@ -142,6 +142,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
@@ -219,6 +220,7 @@ export default function DashboardPage() {
   }
 
   const handleSignOut = async () => {
+    setSigningOut(true)
     await signOut()
     window.location.href = '/'
   }
@@ -257,13 +259,14 @@ export default function DashboardPage() {
           </Link>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer px-3 py-2 rounded-xl transition-colors border"
+            disabled={signingOut}
+            className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer px-3 py-2 rounded-xl transition-colors border disabled:opacity-60"
             style={{ color: '#C04A4A', borderColor: 'rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.05)')}
           >
             <LogOut size={14} />
-            Cerrar sesión
+            {signingOut ? 'Cerrando…' : 'Cerrar sesión'}
           </button>
         </div>
       </header>
