@@ -9,27 +9,36 @@ import { useAuth } from '@/context/AuthContext'
 const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-// Generate 45-min slots from availability
-function generateSlots(startTime: string, endTime: string): string[] {
+// 9:00 AM – 9:00 PM, 1-hour slots (last starts at 21:00, ends 22:00)
+const START_HOUR = 9
+const END_HOUR = 22  // exclusive — last slot starts at 21:00
+
+function generateSlots(): string[] {
   const slots: string[] = []
-  const [sh, sm] = startTime.split(':').map(Number)
-  const [eh, em] = endTime.split(':').map(Number)
-  let minutes = sh * 60 + sm
-  const endMinutes = eh * 60 + em
-  while (minutes + 45 <= endMinutes) {
-    const h = Math.floor(minutes / 60)
-    const m = minutes % 60
-    slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
-    minutes += 45
+  for (let h = START_HOUR; h < END_HOUR; h++) {
+    slots.push(`${String(h).padStart(2, '0')}:00`)
   }
   return slots
 }
 
+const ALL_SLOTS = generateSlots()
+
 function formatSlot(time: string) {
-  const [h, m] = time.split(':').map(Number)
+  const [h] = time.split(':').map(Number)
   const ampm = h >= 12 ? 'PM' : 'AM'
   const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h
-  return `${displayH}:${String(m).padStart(2, '0')} ${ampm}`
+  return `${displayH}:00 ${ampm}`
+}
+
+// Available Mon–Sat (1–6), closed Sunday (0)
+function isDayAvailable(date: Date, today: Date): boolean {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  const t = new Date(today)
+  t.setHours(0, 0, 0, 0)
+  if (d < t) return false
+  const dow = date.getDay()
+  return dow >= 1 && dow <= 6
 }
 
 interface Props {
@@ -49,68 +58,44 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [modality, setModality] = useState<'online' | 'presencial'>('online')
   const [reason, setReason] = useState('')
-  const [availableSlots, setAvailableSlots] = useState<string[]>([])
   const [bookedSlots, setBookedSlots] = useState<string[]>([])
-  const [availableDays, setAvailableDays] = useState<number[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
-  // Fetch available days of week
-  useEffect(() => {
-    supabase
-      .from('availability_slots')
-      .select('day_of_week')
-      .eq('is_active', true)
-      .then(({ data }) => {
-        const days = [...new Set((data ?? []).map((d) => d.day_of_week))]
-        setAvailableDays(days)
-      })
-  }, [supabase])
-
-  // Fetch slots for selected date
-  const fetchSlots = useCallback(async (date: string) => {
+  const fetchBooked = useCallback(async (date: string) => {
     setLoadingSlots(true)
-    setAvailableSlots([])
     setSelectedSlot(null)
-
-    const dayOfWeek = new Date(date + 'T00:00:00').getDay()
-
-    const [{ data: avail }, { data: booked }] = await Promise.all([
-      supabase.from('availability_slots').select('start_time,end_time').eq('day_of_week', dayOfWeek).eq('is_active', true),
-      supabase.from('appointments').select('start_time').eq('appointment_date', date).in('status', ['pending', 'confirmed']),
-    ])
-
-    const allSlots = (avail ?? []).flatMap((a) => generateSlots(a.start_time, a.end_time))
-    const taken = (booked ?? []).map((b) => b.start_time.slice(0, 5))
-    setBookedSlots(taken)
-    setAvailableSlots(allSlots)
+    const { data } = await supabase
+      .from('appointments')
+      .select('start_time')
+      .eq('appointment_date', date)
+      .in('status', ['pending', 'confirmed'])
+    setBookedSlots((data ?? []).map((b) => b.start_time.slice(0, 5)))
     setLoadingSlots(false)
   }, [supabase])
 
   useEffect(() => {
-    if (selectedDate) fetchSlots(selectedDate)
-  }, [selectedDate, fetchSlots])
+    if (selectedDate) fetchBooked(selectedDate)
+  }, [selectedDate, fetchBooked])
 
-  // Real-time updates on bookings
+  // Real-time: refresh slots when anyone books
   useEffect(() => {
     if (!selectedDate) return
     const channel = supabase
       .channel('booking-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
-        fetchSlots(selectedDate)
+        fetchBooked(selectedDate)
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [selectedDate, fetchSlots, supabase])
+  }, [selectedDate, fetchBooked, supabase])
 
   const handleSubmit = async () => {
     if (!selectedDate || !selectedSlot || !user) return
     setSubmitting(true)
-    const [h, m] = selectedSlot.split(':').map(Number)
-    const endH = h + (m + 45 >= 60 ? 1 : 0)
-    const endM = (m + 45) % 60
-    const endTime = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}:00`
+    const [h] = selectedSlot.split(':').map(Number)
+    const endTime = `${String(h + 1).padStart(2, '0')}:00:00`
 
     const { error } = await supabase.from('appointments').insert({
       client_id: user.id,
@@ -129,12 +114,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
   // Calendar helpers
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
   const firstDay = new Date(calYear, calMonth, 1).getDay()
-
-  const isDateAvailable = (day: number) => {
-    const date = new Date(calYear, calMonth, day)
-    if (date < today) return false
-    return availableDays.includes(date.getDay())
-  }
+  const todayStr = today.toISOString().slice(0, 10)
 
   const formatCalDate = (day: number) => {
     const m = String(calMonth + 1).padStart(2, '0')
@@ -181,7 +161,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
               </div>
               <h3 className="font-heading text-xl font-bold" style={{ color: '#2D2B3D' }}>¡Cita reservada!</h3>
               <p className="text-sm" style={{ color: '#7A788F' }}>
-                Cristal confirmará tu cita pronto por WhatsApp.
+                Cristal confirmará tu cita pronto.
               </p>
             </motion.div>
           ) : (
@@ -195,6 +175,12 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
                   ${price} MXN
                   {isFirstSession && <span className="text-xs font-normal ml-1 line-through" style={{ color: '#9CA3AF' }}>$200</span>}
                 </span>
+              </div>
+
+              {/* Info */}
+              <div className="flex items-center gap-2 text-xs" style={{ color: '#7A788F' }}>
+                <Clock size={12} style={{ color: '#B8AFF0' }} />
+                Lunes a Sábado · 9:00 AM – 10:00 PM · Sesiones de 1 hora
               </div>
 
               {/* Calendar */}
@@ -219,22 +205,20 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
                   </button>
                 </div>
 
-                {/* Day labels */}
                 <div className="grid grid-cols-7 mb-1">
                   {DAYS.map((d) => (
                     <div key={d} className="text-center text-xs font-semibold py-1" style={{ color: '#B8AFF0' }}>{d}</div>
                   ))}
                 </div>
 
-                {/* Days grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: firstDay }).map((_, i) => <div key={`e-${i}`} />)}
                   {Array.from({ length: daysInMonth }).map((_, i) => {
                     const day = i + 1
                     const dateStr = formatCalDate(day)
-                    const available = isDateAvailable(day)
+                    const available = isDayAvailable(new Date(calYear, calMonth, day), today)
                     const selected = selectedDate === dateStr
-                    const isToday = dateStr === today.toISOString().slice(0, 10)
+                    const isToday = dateStr === todayStr
                     return (
                       <button
                         key={day}
@@ -265,11 +249,9 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
                     <div className="flex justify-center py-4">
                       <Loader2 size={20} className="animate-spin" style={{ color: '#B8AFF0' }} />
                     </div>
-                  ) : availableSlots.length === 0 ? (
-                    <p className="text-sm text-center py-3" style={{ color: '#7A788F' }}>No hay horarios disponibles para este día.</p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
-                      {availableSlots.map((slot) => {
+                      {ALL_SLOTS.map((slot) => {
                         const taken = bookedSlots.includes(slot)
                         const sel = selectedSlot === slot
                         return (
