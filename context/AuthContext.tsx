@@ -73,10 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await Promise.race([
-      supabase.auth.signOut(),
-      new Promise(resolve => setTimeout(resolve, 3000)),
+      fetch('/api/signout', { method: 'POST' }),
+      new Promise(resolve => setTimeout(resolve, 4000)),
     ])
-    // Don't clear local state — the redirect will reload the page cleanly
   }
 
   return (
