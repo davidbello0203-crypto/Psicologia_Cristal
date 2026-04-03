@@ -35,9 +35,9 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleSignOut = () => {
-    signOut()
+  const handleSignOut = async () => {
     setUserMenuOpen(false)
+    await signOut()
     window.location.href = '/'
   }
 
