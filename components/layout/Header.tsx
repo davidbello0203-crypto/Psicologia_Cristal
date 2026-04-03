@@ -141,24 +141,20 @@ export function Header() {
             ) : (
               /* Not logged in — placeholder */
               <Link
-                href="/registro"
+                href="/login"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 cursor-pointer flex-shrink-0"
                 style={{
                   background: scrolled ? 'white' : 'rgba(255,255,255,0.85)',
                   borderColor: 'rgba(184,175,240,0.4)',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#0D6EFD'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(184,175,240,0.4)'
-                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0D6EFD' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(184,175,240,0.4)' }}
               >
                 <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F4F2FF' }}>
                   <UserCircle2 size={16} style={{ color: '#B8AFF0' }} />
                 </div>
                 <span className="text-sm font-medium hidden sm:block" style={{ color: '#7A788F' }}>
-                  Regístrate
+                  Mi cuenta
                 </span>
               </Link>
             )
