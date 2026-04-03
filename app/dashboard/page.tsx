@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import type { Appointment } from '@/types/database'
 import { BookingModal } from '@/components/dashboard/BookingModal'
 import { AvatarCropModal } from '@/components/dashboard/AvatarCropModal'
+import { AppointmentCalendar } from '@/components/dashboard/AppointmentCalendar'
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pendiente',   color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  icon: AlertCircle },
@@ -340,6 +341,9 @@ export default function DashboardPage() {
           <Plus size={18} />
           Reservar nueva cita
         </motion.button>
+
+        {/* Calendar */}
+        <AppointmentCalendar appointments={appointments.map(a => ({ appointment_date: a.appointment_date, start_time: a.start_time, status: a.status ?? 'pending' }))} />
 
         {/* Appointment tabs */}
         <div>

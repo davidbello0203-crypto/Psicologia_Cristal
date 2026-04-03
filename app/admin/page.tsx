@@ -13,6 +13,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import type { Appointment, Profile, ClinicalNote } from '@/types/database'
+import { AppointmentCalendar } from '@/components/dashboard/AppointmentCalendar'
 
 type AppointmentWithProfile = Appointment & { profiles: Profile }
 
@@ -354,6 +355,16 @@ export default function AdminPage() {
           <StatCard icon={DollarSign} label="Ingresos mes" value={`$${monthRevenue}`} sub="MXN completadas" color="#10B981" />
           <StatCard icon={Users} label="Clientes" value={clients.length} sub="Registrados" color="#B8AFF0" />
         </div>
+
+        {/* Calendar */}
+        <AppointmentCalendar
+          appointments={appointments.map(a => ({
+            appointment_date: a.appointment_date,
+            start_time: a.start_time,
+            status: a.status ?? 'pending',
+            full_name: (a as any).profiles?.full_name,
+          }))}
+        />
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 rounded-2xl overflow-x-auto" style={{ background: 'rgba(184,175,240,0.15)' }}>
