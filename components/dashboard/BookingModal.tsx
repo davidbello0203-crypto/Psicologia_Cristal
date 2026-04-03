@@ -53,7 +53,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
 
   // Cargar estado presencial
   useEffect(() => {
-    supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single()
+    ;(supabase as any).from('app_settings').select('value').eq('key', 'presencial_enabled').single()
       .then(({ data }) => {
         const enabled = data?.value === true || data?.value === 'true'
         setPresencialEnabled(enabled)

@@ -160,7 +160,7 @@ export default function DashboardPage() {
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('notifications')
       .select('id, title, message')
       .eq('user_id', user.id)
@@ -171,7 +171,7 @@ export default function DashboardPage() {
 
   const dismissNotification = async (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id))
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    await (supabase as any).from('notifications').update({ read: true }).eq('id', id)
   }
 
   useEffect(() => {

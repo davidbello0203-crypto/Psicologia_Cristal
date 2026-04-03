@@ -33,7 +33,7 @@ export function PresencialToggle() {
   const [showMessage, setShowMessage] = useState(false)
 
   const fetchStatus = useCallback(async () => {
-    const { data } = await supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single()
+    const { data } = await (supabase as any).from('app_settings').select('value').eq('key', 'presencial_enabled').single()
     setEnabled(data?.value === true || data?.value === 'true')
     setLoading(false)
   }, [supabase])
@@ -43,7 +43,7 @@ export function PresencialToggle() {
   const fetchAffected = useCallback(async () => {
     setLoadingAffected(true)
     const today = new Date().toISOString().slice(0, 10)
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('appointments')
       .select('id, appointment_date, start_time, client_id, profiles(full_name, email)')
       .eq('modality', 'presencial')
@@ -62,7 +62,7 @@ export function PresencialToggle() {
     } else {
       // Va a activar — sin confirmación necesaria
       setSaving(true)
-      await supabase.from('app_settings').update({ value: true, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
+      await (supabase as any).from('app_settings').update({ value: true, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
       setEnabled(true)
       setSaving(false)
     }
@@ -73,7 +73,7 @@ export function PresencialToggle() {
     const today = new Date().toISOString().slice(0, 10)
 
     // 1. Desactivar presencial
-    await supabase.from('app_settings').update({ value: false, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
+    await (supabase as any).from('app_settings').update({ value: false, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
 
     // 2. Cancelar citas presenciales futuras y notificar
     if (affected.length > 0) {
@@ -88,7 +88,7 @@ export function PresencialToggle() {
         message: `Tu sesión del ${formatDate(a.appointment_date)} a las ${formatTime(a.start_time)} fue cancelada porque Cristal no está disponible de forma presencial. Puedes reagendarla en línea cuando quieras.`,
         appointment_id: a.id,
       }))
-      await supabase.from('notifications').insert(notifications)
+      await (supabase as any).from('notifications').insert(notifications)
     }
 
     setEnabled(false)
