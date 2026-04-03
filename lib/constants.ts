@@ -7,8 +7,8 @@ export const SITE_CONFIG = {
     'Me llamo Cristal y me dedico a acompañar procesos de bienestar emocional, autoconocimiento y salud mental. Conmigo encontrarás un espacio seguro y sin prejuicios en donde podrás expresarte libremente.',
   whatsapp: '+527471432188',
   whatsappDisplay: '+52 747 143 2188',
-  instagram: 'https://www.instagram.com/psic.cris_bh',
-  instagramHandle: '@psic.cris_bh',
+  instagram: 'https://www.instagram.com/psic.cris_hernandez',
+  instagramHandle: '@psic.cris_hernandez',
   location: 'Guerrero, México',
 }
 

@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import type { Appointment } from '@/types/database'
 import { BookingModal } from '@/components/dashboard/BookingModal'
+import { AvatarCropModal } from '@/components/dashboard/AvatarCropModal'
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pendiente',   color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  icon: AlertCircle },
@@ -140,6 +141,7 @@ export default function DashboardPage() {
   const [showBooking, setShowBooking] = useState(false)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
@@ -168,19 +170,30 @@ export default function DashboardPage() {
     return () => { supabase.removeChannel(channel) }
   }, [user, fetchAppointments, supabase])
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setCropSrc(reader.result as string)
+    reader.readAsDataURL(file)
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const handleCropSave = async (blob: Blob) => {
+    if (!user) return
     setUploadingAvatar(true)
-    const ext = file.name.split('.').pop()
-    const path = `${user.id}/avatar.${ext}`
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    const path = `${user.id}/avatar.jpg`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
     if (!uploadError) {
       const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-      await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id)
+      // Bust cache by appending timestamp
+      const bustUrl = `${data.publicUrl}?t=${Date.now()}`
+      await supabase.from('profiles').update({ avatar_url: bustUrl }).eq('id', user.id)
       await refreshProfile()
     }
     setUploadingAvatar(false)
+    setCropSrc(null)
   }
 
   const handleCancel = async (id: string) => {
@@ -379,7 +392,7 @@ export default function DashboardPage() {
               WhatsApp
             </a>
             <a
-              href="https://www.instagram.com/psic.cris_bh"
+              href="https://www.instagram.com/psic.cris_hernandez"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer"
@@ -416,7 +429,7 @@ export default function DashboardPage() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handleAvatarUpload}
+                onChange={handleAvatarFileSelect}
                 disabled={uploadingAvatar}
               />
             </label>
@@ -450,6 +463,16 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Avatar crop modal */}
+      {cropSrc && (
+        <AvatarCropModal
+          imageSrc={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onSave={handleCropSave}
+          saving={uploadingAvatar}
+        />
+      )}
     </div>
   )
 }

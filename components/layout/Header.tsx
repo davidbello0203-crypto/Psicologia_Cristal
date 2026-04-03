@@ -178,6 +178,27 @@ export function Header() {
 
           {/* RIGHT: CTA */}
           <div className="hidden md:flex items-center flex-shrink-0">
+            {!loading && user && (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+                <Link
+                  href={dashboardHref}
+                  className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body font-semibold text-white overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                  style={{
+                    background: 'linear-gradient(135deg, #0D6EFD 0%, #9E94DF 100%)',
+                    boxShadow: '0 4px 18px rgba(13,110,253,0.35)',
+                  }}
+                >
+                  <motion.span
+                    className="absolute inset-0 -skew-x-12"
+                    style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)' }}
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ repeat: Infinity, duration: 2.2, ease: 'linear', repeatDelay: 1 }}
+                    aria-hidden="true"
+                  />
+                  <span className="relative z-10">{profile?.role === 'admin' ? 'Panel admin' : 'Mis citas'}</span>
+                </Link>
+              </motion.div>
+            )}
             {!loading && !user && (
               <motion.div
                 whileHover={{ scale: 1.05 }}
