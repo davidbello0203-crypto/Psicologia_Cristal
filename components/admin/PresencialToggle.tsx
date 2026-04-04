@@ -10,7 +10,7 @@ interface AffectedAppt {
   appointment_date: string
   start_time: string
   client_id: string
-  profiles: { full_name: string; email?: string } | null
+  profiles: { full_name: string } | null
 }
 
 function formatDate(d: string) {
@@ -18,7 +18,8 @@ function formatDate(d: string) {
 }
 function formatTime(t: string) {
   const h = parseInt(t.split(':')[0])
-  return `${h > 12 ? h - 12 : h}:00 ${h >= 12 ? 'PM' : 'AM'}`
+  const display = h === 0 ? 12 : h > 12 ? h - 12 : h
+  return `${display}:00 ${h >= 12 ? 'PM' : 'AM'}`
 }
 
 export function PresencialToggle() {
@@ -33,8 +34,8 @@ export function PresencialToggle() {
   const [showMessage, setShowMessage] = useState(false)
 
   const fetchStatus = useCallback(async () => {
-    const { data } = await (supabase as any).from('app_settings').select('value').eq('key', 'presencial_enabled').single()
-    setEnabled(data?.value === true || data?.value === 'true')
+    const { data } = await supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single()
+    setEnabled(!data || data.value !== false)
     setLoading(false)
   }, [supabase])
 
@@ -43,9 +44,9 @@ export function PresencialToggle() {
   const fetchAffected = useCallback(async () => {
     setLoadingAffected(true)
     const today = new Date().toISOString().slice(0, 10)
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('appointments')
-      .select('id, appointment_date, start_time, client_id, profiles(full_name, email)')
+      .select('id, appointment_date, start_time, client_id, profiles(full_name)')
       .eq('modality', 'presencial')
       .gte('appointment_date', today)
       .in('status', ['pending', 'confirmed'])
@@ -62,7 +63,7 @@ export function PresencialToggle() {
     } else {
       // Va a activar — sin confirmación necesaria
       setSaving(true)
-      await (supabase as any).from('app_settings').update({ value: true, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
+      await supabase.from('app_settings').update({ value: true, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
       setEnabled(true)
       setSaving(false)
     }
@@ -73,7 +74,7 @@ export function PresencialToggle() {
     const today = new Date().toISOString().slice(0, 10)
 
     // 1. Desactivar presencial
-    await (supabase as any).from('app_settings').update({ value: false, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
+    await supabase.from('app_settings').update({ value: false, updated_at: new Date().toISOString() }).eq('key', 'presencial_enabled')
 
     // 2. Cancelar citas presenciales futuras y notificar
     if (affected.length > 0) {
@@ -88,7 +89,7 @@ export function PresencialToggle() {
         message: `Tu sesión del ${formatDate(a.appointment_date)} a las ${formatTime(a.start_time)} fue cancelada porque Cristal no está disponible de forma presencial. Puedes reagendarla en línea cuando quieras.`,
         appointment_id: a.id,
       }))
-      await (supabase as any).from('notifications').insert(notifications)
+      await supabase.from('notifications').insert(notifications)
     }
 
     setEnabled(false)
@@ -97,8 +98,7 @@ export function PresencialToggle() {
     setShowMessage(true)
   }
 
-  // Generar mensaje para copiar
-  const emails = [...new Set(affected.map(a => a.profiles?.email).filter(Boolean))].join(', ')
+  // Generar mensaje para copiar (WhatsApp/difusión manual)
   const copyMessage = `Hola 👋 Te escribo para informarte que por el momento estaré fuera, por lo que las citas presenciales no estarán disponibles temporalmente. Si tenías una cita presencial agendada, fue cancelada automáticamente. Puedes reagendarla en línea desde tu portal: https://tuespacioconcristal.space/dashboard — ¡Lamento los inconvenientes y espero verte pronto! 💙`
 
   const handleCopy = (text: string) => {
@@ -308,25 +308,6 @@ export function PresencialToggle() {
                     </button>
                   </div>
                 </div>
-
-                {/* Correos */}
-                {emails && (
-                  <div>
-                    <p className="text-xs font-semibold mb-1.5" style={{ color: '#7A788F' }}>Correos (para BCC en Gmail)</p>
-                    <div className="relative">
-                      <div className="px-3 py-3 rounded-xl text-xs break-all" style={{ background: '#F4F2FF', color: '#2D2B3D' }}>
-                        {emails}
-                      </div>
-                      <button
-                        onClick={() => handleCopy(emails)}
-                        className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold cursor-pointer"
-                        style={{ background: 'rgba(13,110,253,0.1)', color: '#0D6EFD' }}
-                      >
-                        <Copy size={11} /> Copiar
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 <button
                   onClick={() => setShowMessage(false)}

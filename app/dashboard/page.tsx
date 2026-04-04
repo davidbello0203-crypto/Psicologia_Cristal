@@ -33,7 +33,8 @@ function formatDate(dateStr: string) {
 function formatTime(timeStr: string) {
   const [h, m] = timeStr.split(':')
   const hour = parseInt(h)
-  return `${hour > 12 ? hour - 12 : hour}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
+  const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+  return `${display}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
 }
 
 function AppointmentCard({ appt, onCancel }: { appt: Appointment; onCancel: (id: string) => void }) {
@@ -160,7 +161,7 @@ export default function DashboardPage() {
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from('notifications')
       .select('id, title, message')
       .eq('user_id', user.id)
@@ -171,7 +172,7 @@ export default function DashboardPage() {
 
   const dismissNotification = async (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id))
-    await (supabase as any).from('notifications').update({ read: true }).eq('id', id)
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
   }
 
   useEffect(() => {

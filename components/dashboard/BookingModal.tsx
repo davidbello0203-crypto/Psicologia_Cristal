@@ -53,9 +53,13 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
 
   // Cargar estado presencial
   useEffect(() => {
-    ;(supabase as any).from('app_settings').select('value').eq('key', 'presencial_enabled').single()
-      .then(({ data }: { data: { value: unknown } | null }) => {
-        const enabled = data?.value === true || data?.value === 'true'
+    supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single()
+      .then(({ data, error }) => {
+        if (error || data === null) {
+          setPresencialEnabled(true) // default: presencial disponible si hay error
+          return
+        }
+        const enabled = data.value !== false && data.value !== 'false'
         setPresencialEnabled(enabled)
         if (!enabled) setModality('online')
       })

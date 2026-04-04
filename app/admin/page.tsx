@@ -32,7 +32,8 @@ function formatDate(d: string) {
 function formatTime(t: string) {
   const [h, m] = t.split(':')
   const hour = parseInt(h)
-  return `${hour > 12 ? hour - 12 : hour}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
+  const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+  return `${display}:${m} ${hour >= 12 ? 'PM' : 'AM'}`
 }
 
 // ── Stat Card ─────────────────────────────────────────────────
