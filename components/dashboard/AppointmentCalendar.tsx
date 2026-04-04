@@ -91,6 +91,8 @@ export function AppointmentCalendar({ appointments, onDayClick }: Props) {
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1
             const dateStr = formatDate(day)
+            const dow = new Date(calYear, calMonth, day).getDay()
+            const isWeekend = dow === 0 || dow === 6
             const dayAppts = apptsByDate[dateStr] ?? []
             const isToday = dateStr === todayStr
             const isSelected = selectedDate === dateStr
@@ -100,17 +102,20 @@ export function AppointmentCalendar({ appointments, onDayClick }: Props) {
             return (
               <button
                 key={day}
-                onClick={() => handleDay(dateStr)}
-                className="relative aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-150"
+                onClick={() => !isWeekend && handleDay(dateStr)}
+                disabled={isWeekend}
+                className="relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-150 disabled:cursor-default"
                 style={{
+                  cursor: isWeekend ? 'default' : 'pointer',
                   background: isSelected ? '#0D6EFD' : isToday ? 'rgba(13,110,253,0.08)' : 'transparent',
                   border: isToday && !isSelected ? '1.5px solid rgba(13,110,253,0.25)' : '1.5px solid transparent',
+                  opacity: isWeekend ? 0.3 : 1,
                 }}
               >
                 <span className="text-xs font-semibold" style={{ color: isSelected ? 'white' : hasAppts ? '#2D2B3D' : '#6B7280' }}>
                   {day}
                 </span>
-                {hasAppts && (
+                {hasAppts && !isWeekend && (
                   <div className="flex gap-0.5 mt-0.5">
                     {activeAppts.slice(0, 3).map((a, idx) => (
                       <span key={idx} className="w-1 h-1 rounded-full" style={{ background: isSelected ? 'rgba(255,255,255,0.8)' : (STATUS_COLOR[a.status] ?? '#B8AFF0') }} />
