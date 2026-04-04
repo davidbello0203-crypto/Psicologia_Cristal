@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, Calendar, Clock, Video, MapPin, CheckCircle2, Loader2, WifiOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -32,16 +32,17 @@ interface Props {
   onClose: () => void
   onSuccess: () => void
   isFirstSession: boolean
+  initialDate?: string
 }
 
-export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
+export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }: Props) {
   const { user } = useAuth()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const today = new Date()
-  const [calMonth, setCalMonth] = useState(today.getMonth())
-  const [calYear, setCalYear] = useState(today.getFullYear())
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [calMonth, setCalMonth] = useState(() => initialDate ? parseInt(initialDate.split('-')[1]) - 1 : today.getMonth())
+  const [calYear, setCalYear] = useState(() => initialDate ? parseInt(initialDate.split('-')[0]) : today.getFullYear())
+  const [selectedDate, setSelectedDate] = useState<string | null>(initialDate ?? null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [modality, setModality] = useState<'online' | 'presencial'>('online')
   const [reason, setReason] = useState('')
@@ -68,13 +69,16 @@ export function BookingModal({ onClose, onSuccess, isFirstSession }: Props) {
   const fetchBooked = useCallback(async (date: string) => {
     setLoadingSlots(true)
     setSelectedSlot(null)
-    const { data } = await supabase
-      .from('appointments')
-      .select('start_time')
-      .eq('appointment_date', date)
-      .in('status', ['pending', 'confirmed'])
-    setBookedSlots((data ?? []).map((b) => b.start_time.slice(0, 5)))
-    setLoadingSlots(false)
+    try {
+      const { data } = await supabase
+        .from('appointments')
+        .select('start_time')
+        .eq('appointment_date', date)
+        .in('status', ['pending', 'confirmed'])
+      setBookedSlots((data ?? []).map((b) => b.start_time.slice(0, 5)))
+    } finally {
+      setLoadingSlots(false)
+    }
   }, [supabase])
 
   useEffect(() => {

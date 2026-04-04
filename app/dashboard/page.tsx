@@ -15,7 +15,7 @@ import { useAuth } from '@/context/AuthContext'
 import type { Appointment } from '@/types/database'
 import { BookingModal } from '@/components/dashboard/BookingModal'
 import { AvatarCropModal } from '@/components/dashboard/AvatarCropModal'
-import { AppointmentCalendar } from '@/components/dashboard/AppointmentCalendar'
+import { AvailabilityCalendar } from '@/components/dashboard/AvailabilityCalendar'
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pendiente',   color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  icon: AlertCircle },
@@ -146,6 +146,7 @@ export default function DashboardPage() {
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [signingOut, setSigningOut] = useState(false)
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string }[]>([])
+  const [bookingInitialDate, setBookingInitialDate] = useState<string | undefined>(undefined)
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
@@ -317,7 +318,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-bold" style={{ color: '#2D2B3D' }}>{n.title}</p>
                   <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#7A788F' }}>{n.message}</p>
                   <button
-                    onClick={() => { dismissNotification(n.id); setShowBooking(true) }}
+                    onClick={() => { dismissNotification(n.id); setBookingInitialDate(undefined); setShowBooking(true) }}
                     className="mt-2 text-xs font-semibold cursor-pointer"
                     style={{ color: '#0D6EFD' }}
                   >
@@ -402,7 +403,13 @@ export default function DashboardPage() {
         </motion.button>
 
         {/* Calendar */}
-        <AppointmentCalendar appointments={appointments.map(a => ({ appointment_date: a.appointment_date, start_time: a.start_time, status: a.status ?? 'pending' }))} />
+        <AvailabilityCalendar
+          userAppointments={appointments}
+          onBookDay={(date) => {
+            setBookingInitialDate(date || undefined)
+            setShowBooking(true)
+          }}
+        />
 
         {/* Appointment tabs */}
         <div>
@@ -545,9 +552,10 @@ export default function DashboardPage() {
       <AnimatePresence>
         {showBooking && (
           <BookingModal
-            onClose={() => setShowBooking(false)}
-            onSuccess={() => { setShowBooking(false); fetchAppointments() }}
+            onClose={() => { setShowBooking(false); setBookingInitialDate(undefined) }}
+            onSuccess={() => { setShowBooking(false); setBookingInitialDate(undefined); fetchAppointments() }}
             isFirstSession={appointments.length === 0}
+            initialDate={bookingInitialDate}
           />
         )}
       </AnimatePresence>
