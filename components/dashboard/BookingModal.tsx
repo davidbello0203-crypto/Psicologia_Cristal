@@ -50,6 +50,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [presencialEnabled, setPresencialEnabled] = useState<boolean | null>(null)
 
   // Cargar estado presencial
@@ -69,6 +70,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   const fetchBooked = useCallback(async (date: string) => {
     setLoadingSlots(true)
     setSelectedSlot(null)
+    setSubmitError(null)
     try {
       const { data } = await supabase
         .from('appointments')
@@ -100,21 +102,36 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   const handleSubmit = async () => {
     if (!selectedDate || !selectedSlot || !user) return
     setSubmitting(true)
-    const slotHour = parseInt(selectedSlot.split(':')[0])
-    const endTime = `${String(slotHour + 1).padStart(2, '0')}:00:00`
+    setSubmitError(null)
+    try {
+      const slotHour = parseInt(selectedSlot.split(':')[0])
+      const endTime = `${String(slotHour + 1).padStart(2, '0')}:00:00`
 
-    const { error } = await supabase.from('appointments').insert({
-      client_id: user.id,
-      appointment_date: selectedDate,
-      start_time: selectedSlot + ':00',
-      end_time: endTime,
-      modality,
-      reason: reason || null,
-      session_price: isFirstSession ? 140 : 200,
-      is_first_session: isFirstSession,
-    })
-    setSubmitting(false)
-    if (!error) { setDone(true); setTimeout(onSuccess, 1800) }
+      const { error } = await supabase.from('appointments').insert({
+        client_id: user.id,
+        appointment_date: selectedDate,
+        start_time: selectedSlot + ':00',
+        end_time: endTime,
+        modality,
+        reason: reason || null,
+        session_price: isFirstSession ? 140 : 200,
+        is_first_session: isFirstSession,
+        status: 'pending',
+      })
+
+      if (error) {
+        console.error('Booking insert error:', error)
+        setSubmitError(error.message || 'Error al reservar. Intenta de nuevo.')
+      } else {
+        setDone(true)
+        setTimeout(onSuccess, 1800)
+      }
+    } catch (err) {
+      console.error('Booking unexpected error:', err)
+      setSubmitError('Error inesperado. Intenta de nuevo.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   // Calendar helpers
@@ -409,6 +426,13 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                   onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(184,175,240,0.3)')}
                 />
               </div>
+
+              {/* Error */}
+              {submitError && (
+                <div className="px-4 py-3 rounded-xl text-xs font-medium" style={{ background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.2)', color: '#C04A4A' }}>
+                  {submitError}
+                </div>
+              )}
 
               {/* Submit */}
               <motion.button
