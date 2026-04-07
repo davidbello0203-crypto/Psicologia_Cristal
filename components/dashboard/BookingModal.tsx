@@ -60,7 +60,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   const [calMonth, setCalMonth] = useState(initMonth)
   const [selDate,  setSelDate]  = useState<string | null>(initialDate ?? null)
   const [selSlot,  setSelSlot]  = useState<string | null>(null)
-  const [modality, setModality] = useState<'online' | 'presencial'>('online')
+  const [modality, setModality] = useState<'online' | 'presencial'>('presencial')
   const [reason,   setReason]   = useState('')
 
   const [bookedSlots,       setBookedSlots]       = useState<string[]>([])
