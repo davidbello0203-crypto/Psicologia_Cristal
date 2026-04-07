@@ -145,6 +145,7 @@ export default function DashboardPage() {
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
+    await supabase.auth.getSession()
     const { data, error } = await supabase
       .from('appointments')
       .select('*')

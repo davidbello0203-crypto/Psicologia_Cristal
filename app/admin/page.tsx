@@ -244,9 +244,8 @@ function AppointmentRow({ appt, onStatusChange }: {
 
 // ── Main Admin Page ────────────────────────────────────────────
 export default function AdminPage() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, supabase } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
 
   const [appointments, setAppointments] = useState<AppointmentWithProfile[]>([])
   const [clients, setClients] = useState<Profile[]>([])
@@ -256,6 +255,7 @@ export default function AdminPage() {
 
   const fetchData = useCallback(async () => {
     try {
+      await supabase.auth.getSession()
       const [{ data: appts }, { data: clientData }] = await Promise.all([
         supabase
           .from('appointments')
