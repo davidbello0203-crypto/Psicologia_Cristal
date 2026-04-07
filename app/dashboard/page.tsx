@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -133,7 +133,7 @@ function AppointmentCard({ appt, onCancel }: { appt: Appointment; onCancel: (id:
 export default function DashboardPage() {
   const { user, profile, signOut, refreshProfile } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(false)
@@ -147,12 +147,14 @@ export default function DashboardPage() {
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
+    console.log('fetchAppointments → user.id:', user.id)
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
       .eq('client_id', user.id)
       .order('appointment_date', { ascending: false })
       .order('start_time', { ascending: false })
+    console.log('fetchAppointments → data:', data, 'error:', error)
     if (error) console.error('fetchAppointments error:', error)
     setAppointments(data ?? [])
     setLoading(false)
