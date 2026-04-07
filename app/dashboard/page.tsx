@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -133,7 +133,8 @@ function AppointmentCard({ appt, onCancel }: { appt: Appointment; onCancel: (id:
 export default function DashboardPage() {
   const { user, profile, signOut, refreshProfile } = useAuth()
   const router = useRouter()
-  const supabase = useMemo(() => createClient(), [])
+  const supabaseRef = useRef(createClient())
+  const supabase = supabaseRef.current
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(false)
