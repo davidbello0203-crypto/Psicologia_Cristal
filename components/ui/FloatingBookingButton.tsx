@@ -6,26 +6,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CalendarPlus } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { BookingModal } from '@/components/dashboard/BookingModal'
-import { createClient } from '@/lib/supabase/client'
 
 export function FloatingBookingButton() {
   const { user } = useAuth()
   const router = useRouter()
-  const supabase = createClient()
   const [showModal, setShowModal] = useState(false)
-  const [isFirstSession, setIsFirstSession] = useState(false)
 
-  const handleClick = async () => {
+  const handleClick = () => {
     if (!user) {
       router.push('/registro')
       return
     }
-    const { data } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('client_id', user.id)
-      .limit(1)
-    setIsFirstSession(!data || data.length === 0)
     setShowModal(true)
   }
 
@@ -61,7 +52,7 @@ export function FloatingBookingButton() {
           <BookingModal
             onClose={() => setShowModal(false)}
             onSuccess={() => setShowModal(false)}
-            isFirstSession={isFirstSession}
+            isFirstSession={false}
           />
         )}
       </AnimatePresence>
