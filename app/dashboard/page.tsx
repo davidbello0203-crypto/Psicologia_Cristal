@@ -107,10 +107,7 @@ function AppointmentCard({ appt, onCancel }: { appt: Appointment; onCancel: (id:
 
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold" style={{ color: '#2D2B3D' }}>
-            ${appt.is_first_session
-              ? ((appt.session_price ?? 200) * 0.7).toFixed(0)
-              : (appt.session_price ?? 200).toFixed(0)
-            } MXN
+            ${(appt.session_price ?? 200).toFixed(0)} MXN
             {appt.is_first_session && (
               <span className="text-xs font-normal ml-1 line-through" style={{ color: '#9CA3AF' }}>$200</span>
             )}
