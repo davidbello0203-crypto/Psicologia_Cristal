@@ -86,12 +86,23 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
     setLoadingSlots(true)
     setSelSlot(null)
     setSubmitError(null)
+
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        cancelled = true
+        console.warn('fetchBooked timeout — mostrando todos los slots disponibles')
+        setBookedSlots([])
+        setLoadingSlots(false)
+      }
+    }, 6000)
+
     supabase
       .from('appointments')
       .select('start_time')
       .eq('appointment_date', selDate)
       .in('status', ['pending', 'confirmed'])
       .then(({ data, error }) => {
+        clearTimeout(timeout)
         if (cancelled) return
         if (error) {
           console.error('fetchBooked error:', error)
@@ -101,7 +112,8 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
         }
         setLoadingSlots(false)
       })
-    return () => { cancelled = true }
+
+    return () => { cancelled = true; clearTimeout(timeout) }
   }, [selDate, supabase])
 
   // ── Navegar mes ───────────────────────────────────────────────────────────
