@@ -26,6 +26,14 @@ function toDateStr(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
 }
 
+function isSlotPast(slot: string, dateStr: string, todayStr: string): boolean {
+  if (dateStr !== todayStr) return false
+  const slotHour = parseInt(slot.split(':')[0])
+  const now = new Date()
+  // Deshabilitar si la hora del slot ya pasó (incluyendo la hora actual)
+  return slotHour <= now.getHours()
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface Props {
   onClose: () => void
@@ -291,7 +299,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                         <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌅 Matutino</p>
                         <div className="grid grid-cols-3 gap-2">
                           {MORNING.map(slot => {
-                            const taken = bookedSlots.includes(slot)
+                            const taken = bookedSlots.includes(slot) || isSlotPast(slot, selDate!, todayStr)
                             const sel   = selSlot === slot
                             return (
                               <button
@@ -319,7 +327,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                         <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌆 Vespertino</p>
                         <div className="grid grid-cols-4 gap-2">
                           {EVENING.map(slot => {
-                            const taken = bookedSlots.includes(slot)
+                            const taken = bookedSlots.includes(slot) || isSlotPast(slot, selDate!, todayStr)
                             const sel   = selSlot === slot
                             return (
                               <button
