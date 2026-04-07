@@ -284,13 +284,8 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                     Horarios disponibles
                   </p>
 
-                  {loadingSlots ? (
-                    <div className="flex items-center justify-center gap-2 py-6" style={{ color: '#B8AFF0' }}>
-                      <Loader2 size={18} className="animate-spin" />
-                      <span className="text-xs">Cargando horarios…</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
+                  {/* Siempre mostrar slots — opacidad reducida mientras carga */}
+                  <div className="space-y-4" style={{ opacity: loadingSlots ? 0.45 : 1, transition: 'opacity 0.3s' }}>
                       {/* Mañana */}
                       <div>
                         <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌅 Mañana</p>
@@ -346,6 +341,12 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                           })}
                         </div>
                       </div>
+                    </div>
+
+                  {loadingSlots && (
+                    <div className="flex items-center gap-1.5 mt-1" style={{ color: '#B8AFF0' }}>
+                      <Loader2 size={11} className="animate-spin" />
+                      <span className="text-xs">Verificando disponibilidad…</span>
                     </div>
                   )}
                 </div>
