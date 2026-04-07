@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,7 +10,6 @@ import {
   Sparkles, Heart, Phone, MessageCircle, Camera, Loader2, Bell, X,
 } from 'lucide-react'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import type { Appointment } from '@/types/database'
 import { BookingModal } from '@/components/dashboard/BookingModal'
@@ -131,10 +130,8 @@ function AppointmentCard({ appt, onCancel }: { appt: Appointment; onCancel: (id:
 }
 
 export default function DashboardPage() {
-  const { user, profile, signOut, refreshProfile } = useAuth()
+  const { user, profile, signOut, refreshProfile, supabase } = useAuth()
   const router = useRouter()
-  const supabaseRef = useRef(createClient())
-  const supabase = supabaseRef.current
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(false)

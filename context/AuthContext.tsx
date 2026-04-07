@@ -10,15 +10,19 @@ interface AuthContextValue {
   session: Session | null
   profile: Profile | null
   loading: boolean
+  supabase: ReturnType<typeof createClient>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
+
+const sharedSupabase = createClient()
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   session: null,
   profile: null,
   loading: true,
+  supabase: sharedSupabase,
   signOut: async () => {},
   refreshProfile: async () => {},
 })
@@ -28,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = sharedSupabase
 
   const fetchProfile = useCallback(async (userId: string) => {
     // Try RPC first (bypasses RLS), fallback to direct query
@@ -84,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, supabase, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
