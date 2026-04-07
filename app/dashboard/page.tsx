@@ -147,14 +147,12 @@ export default function DashboardPage() {
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
-    console.log('fetchAppointments → user.id:', user.id)
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
       .eq('client_id', user.id)
       .order('appointment_date', { ascending: false })
       .order('start_time', { ascending: false })
-    console.log('fetchAppointments → data:', data, 'error:', error)
     if (error) console.error('fetchAppointments error:', error)
     setAppointments(data ?? [])
     setLoading(false)
