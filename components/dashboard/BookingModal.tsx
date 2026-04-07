@@ -63,66 +63,42 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   const [modality, setModality] = useState<'online' | 'presencial'>('presencial')
   const [reason,   setReason]   = useState('')
 
-  const [bookedSlots,       setBookedSlots]       = useState<string[]>([])
-  const [loadingSlots,      setLoadingSlots]      = useState(false)
+  // allBookedByDate: { '2026-04-07': ['09:00','10:00'], ... }
+  const [allBookedByDate,   setAllBookedByDate]   = useState<Record<string, string[]>>({})
+  const [prefetching,       setPrefetching]       = useState(true)
   const [presencialEnabled, setPresencialEnabled] = useState<boolean>(true)
   const [submitting,        setSubmitting]        = useState(false)
   const [submitError,       setSubmitError]       = useState<string | null>(null)
   const [done,              setDone]              = useState(false)
 
-  // ── Cargar estado presencial UNA vez ──────────────────────────────────────
+  // ── Pre-cargar TODO al abrir el modal (una sola query) ────────────────────
   useEffect(() => {
     let cancelled = false
-    supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'presencial_enabled')
-      .single()
-      .then(({ data }) => {
-        if (cancelled) return
-        const enabled = !data || data.value !== false
-        setPresencialEnabled(enabled)
-        if (!enabled) setModality('online')
-      })
-    return () => { cancelled = true }
-  }, [supabase])
-
-  // ── Cargar slots ocupados cuando cambia la fecha seleccionada ─────────────
-  useEffect(() => {
-    if (!selDate) return
-    let cancelled = false
-    setLoadingSlots(true)
-    setSelSlot(null)
-    setSubmitError(null)
-
-    const timeout = setTimeout(() => {
-      if (!cancelled) {
-        cancelled = true
-        console.warn('fetchBooked timeout — mostrando todos los slots disponibles')
-        setBookedSlots([])
-        setLoadingSlots(false)
+    // Fetch presencial + slots en paralelo
+    Promise.all([
+      supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single(),
+      supabase
+        .from('appointments')
+        .select('appointment_date, start_time')
+        .gte('appointment_date', todayStr)
+        .in('status', ['pending', 'confirmed']),
+    ]).then(([{ data: setting }, { data: appts }]) => {
+      if (cancelled) return
+      // Presencial
+      const enabled = !setting || setting.value !== false
+      setPresencialEnabled(enabled)
+      if (!enabled) setModality('online')
+      // Slots por fecha
+      const map: Record<string, string[]> = {}
+      for (const row of appts ?? []) {
+        if (!map[row.appointment_date]) map[row.appointment_date] = []
+        map[row.appointment_date].push(row.start_time.slice(0, 5))
       }
-    }, 6000)
-
-    supabase
-      .from('appointments')
-      .select('start_time')
-      .eq('appointment_date', selDate)
-      .in('status', ['pending', 'confirmed'])
-      .then(({ data, error }) => {
-        clearTimeout(timeout)
-        if (cancelled) return
-        if (error) {
-          console.error('fetchBooked error:', error)
-          setBookedSlots([])
-        } else {
-          setBookedSlots((data ?? []).map(r => r.start_time.slice(0, 5)))
-        }
-        setLoadingSlots(false)
-      })
-
-    return () => { cancelled = true; clearTimeout(timeout) }
-  }, [selDate, supabase])
+      setAllBookedByDate(map)
+      setPrefetching(false)
+    })
+    return () => { cancelled = true }
+  }, [supabase, todayStr])
 
   // ── Navegar mes ───────────────────────────────────────────────────────────
   const prevMonth = () => {
@@ -142,21 +118,32 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
     try {
       const h       = parseInt(selSlot.split(':')[0])
       const endTime = `${String(h + 1).padStart(2,'0')}:00:00`
-      const { error } = await supabase.from('appointments').insert({
-        client_id:        user.id,
-        appointment_date: selDate,
-        start_time:       selSlot + ':00',
-        end_time:         endTime,
-        modality,
-        status:           'pending',
-        reason:           reason.trim() || null,
-        session_price:    isFirstSession ? 140 : 200,
-        is_first_session: isFirstSession,
-      })
+      const timeoutPromise = new Promise<{ error: { message: string } }>(resolve =>
+        setTimeout(() => resolve({ error: { message: 'Tiempo de espera agotado. Verifica tu conexión.' } }), 10000)
+      )
+      const { error } = await Promise.race([
+        supabase.from('appointments').insert({
+          client_id:        user.id,
+          appointment_date: selDate,
+          start_time:       selSlot + ':00',
+          end_time:         endTime,
+          modality,
+          status:           'pending',
+          reason:           reason.trim() || null,
+          session_price:    isFirstSession ? 140 : 200,
+          is_first_session: isFirstSession,
+        }),
+        timeoutPromise,
+      ]) as { error: { message: string } | null }
       if (error) {
         console.error('insert error:', error)
         setSubmitError('No se pudo reservar: ' + error.message)
       } else {
+        // Actualizar mapa local para que el slot quede marcado inmediatamente
+        setAllBookedByDate(prev => ({
+          ...prev,
+          [selDate]: [...(prev[selDate] ?? []), selSlot],
+        }))
         setDone(true)
         setTimeout(onSuccess, 1800)
       }
@@ -292,14 +279,13 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                     Horarios disponibles
                   </p>
 
-                  {/* Siempre mostrar slots — opacidad reducida mientras carga */}
-                  <div className="space-y-4" style={{ opacity: loadingSlots ? 0.45 : 1, transition: 'opacity 0.3s' }}>
-                      {/* Mañana */}
+                  <div className="space-y-4" style={{ opacity: prefetching ? 0.5 : 1, transition: 'opacity 0.25s' }}>
+                      {/* Matutino */}
                       <div>
                         <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌅 Matutino</p>
                         <div className="grid grid-cols-3 gap-2">
                           {MORNING.map(slot => {
-                            const taken = bookedSlots.includes(slot) || isSlotPast(slot, selDate!, todayStr)
+                            const taken = (allBookedByDate[selDate] ?? []).includes(slot) || isSlotPast(slot, selDate!, todayStr)
                             const sel   = selSlot === slot
                             return (
                               <button
@@ -327,7 +313,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                         <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌆 Vespertino</p>
                         <div className="grid grid-cols-4 gap-2">
                           {EVENING.map(slot => {
-                            const taken = bookedSlots.includes(slot) || isSlotPast(slot, selDate!, todayStr)
+                            const taken = (allBookedByDate[selDate] ?? []).includes(slot) || isSlotPast(slot, selDate!, todayStr)
                             const sel   = selSlot === slot
                             return (
                               <button
@@ -351,7 +337,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                       </div>
                     </div>
 
-                  {loadingSlots && (
+                  {prefetching && (
                     <div className="flex items-center gap-1.5 mt-1" style={{ color: '#B8AFF0' }}>
                       <Loader2 size={11} className="animate-spin" />
                       <span className="text-xs">Verificando disponibilidad…</span>

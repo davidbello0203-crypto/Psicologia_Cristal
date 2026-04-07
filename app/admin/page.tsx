@@ -250,7 +250,7 @@ export default function AdminPage() {
 
   const [appointments, setAppointments] = useState<AppointmentWithProfile[]>([])
   const [clients, setClients] = useState<Profile[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'all' | 'clients'>('today')
   const [refreshing, setRefreshing] = useState(false)
 

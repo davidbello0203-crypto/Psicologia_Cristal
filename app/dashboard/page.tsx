@@ -139,7 +139,7 @@ export default function DashboardPage() {
   const supabase = createClient()
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [showBooking, setShowBooking] = useState(false)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
