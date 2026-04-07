@@ -74,29 +74,39 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   // ── Pre-cargar TODO al abrir el modal (una sola query) ────────────────────
   useEffect(() => {
     let cancelled = false
-    // Fetch presencial + slots en paralelo
-    Promise.all([
-      supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single(),
-      supabase
-        .from('appointments')
-        .select('appointment_date, start_time')
-        .gte('appointment_date', todayStr)
-        .in('status', ['pending', 'confirmed']),
-    ]).then(([{ data: setting }, { data: appts }]) => {
-      if (cancelled) return
-      // Presencial
-      const enabled = !setting || setting.value !== false
-      setPresencialEnabled(enabled)
-      if (!enabled) setModality('online')
-      // Slots por fecha
-      const map: Record<string, string[]> = {}
-      for (const row of appts ?? []) {
-        if (!map[row.appointment_date]) map[row.appointment_date] = []
-        map[row.appointment_date].push(row.start_time.slice(0, 5))
+
+    const run = async () => {
+      try {
+        const [settingRes, apptsRes] = await Promise.all([
+          supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single(),
+          supabase
+            .from('appointments')
+            .select('appointment_date, start_time')
+            .gte('appointment_date', todayStr)
+            .in('status', ['pending', 'confirmed']),
+        ])
+        if (cancelled) return
+
+        // Presencial
+        const enabled = !settingRes.data || settingRes.data.value !== false
+        setPresencialEnabled(enabled)
+        if (!enabled) setModality('online')
+
+        // Slots por fecha
+        const map: Record<string, string[]> = {}
+        for (const row of apptsRes.data ?? []) {
+          if (!map[row.appointment_date]) map[row.appointment_date] = []
+          map[row.appointment_date].push(row.start_time.slice(0, 5))
+        }
+        setAllBookedByDate(map)
+      } catch (e) {
+        console.error('prefetch error:', e)
+      } finally {
+        if (!cancelled) setPrefetching(false)
       }
-      setAllBookedByDate(map)
-      setPrefetching(false)
-    })
+    }
+
+    run()
     return () => { cancelled = true }
   }, [supabase, todayStr])
 
