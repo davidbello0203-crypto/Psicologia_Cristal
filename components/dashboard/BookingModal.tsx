@@ -71,43 +71,42 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
   const [submitError,       setSubmitError]       = useState<string | null>(null)
   const [done,              setDone]              = useState(false)
 
-  // ── Pre-cargar TODO al abrir el modal (una sola query) ────────────────────
+  // ── Pre-cargar TODO al abrir el modal ────────────────────────────────────
   useEffect(() => {
-    let cancelled = false
+    const fallback = setTimeout(() => setPrefetching(false), 8000)
 
-    const run = async () => {
+    async function run() {
       try {
-        const [settingRes, apptsRes] = await Promise.all([
-          supabase.from('app_settings').select('value').eq('key', 'presencial_enabled').single(),
-          supabase
-            .from('appointments')
-            .select('appointment_date, start_time')
-            .gte('appointment_date', todayStr)
-            .in('status', ['pending', 'confirmed']),
-        ])
-        if (cancelled) return
+        const { data: appts } = await supabase
+          .from('appointments')
+          .select('appointment_date, start_time')
+          .gte('appointment_date', todayStr)
+          .in('status', ['pending', 'confirmed'])
 
-        // Presencial
-        const enabled = !settingRes.data || settingRes.data.value !== false
-        setPresencialEnabled(enabled)
-        if (!enabled) setModality('online')
-
-        // Slots por fecha
         const map: Record<string, string[]> = {}
-        for (const row of apptsRes.data ?? []) {
+        for (const row of appts ?? []) {
           if (!map[row.appointment_date]) map[row.appointment_date] = []
           map[row.appointment_date].push(row.start_time.slice(0, 5))
         }
         setAllBookedByDate(map)
-      } catch (e) {
-        console.error('prefetch error:', e)
-      } finally {
-        if (!cancelled) setPrefetching(false)
-      }
+      } catch { /* sin conexión — mostrar todos disponibles */ }
+      clearTimeout(fallback)
+      setPrefetching(false)
+    }
+
+    async function runPresencial() {
+      try {
+        const { data } = await supabase
+          .from('app_settings').select('value').eq('key', 'presencial_enabled').single()
+        const enabled = !data || data.value !== false
+        setPresencialEnabled(enabled)
+        if (!enabled) setModality('online')
+      } catch { /* default: presencial habilitado */ }
     }
 
     run()
-    return () => { cancelled = true }
+    runPresencial()
+    return () => clearTimeout(fallback)
   }, [supabase, todayStr])
 
   // ── Navegar mes ───────────────────────────────────────────────────────────
