@@ -288,7 +288,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                   <div className="space-y-4" style={{ opacity: loadingSlots ? 0.45 : 1, transition: 'opacity 0.3s' }}>
                       {/* Mañana */}
                       <div>
-                        <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌅 Mañana</p>
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌅 Matutino</p>
                         <div className="grid grid-cols-3 gap-2">
                           {MORNING.map(slot => {
                             const taken = bookedSlots.includes(slot)
@@ -316,7 +316,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
 
                       {/* Tarde */}
                       <div>
-                        <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌆 Tarde</p>
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#9CA3AF' }}>🌆 Vespertino</p>
                         <div className="grid grid-cols-4 gap-2">
                           {EVENING.map(slot => {
                             const taken = bookedSlots.includes(slot)
