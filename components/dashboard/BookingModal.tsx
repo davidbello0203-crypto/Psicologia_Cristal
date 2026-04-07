@@ -128,7 +128,7 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
       const h       = parseInt(selSlot.split(':')[0])
       const endTime = `${String(h + 1).padStart(2,'0')}:00:00`
       const timeoutPromise = new Promise<{ error: { message: string } }>(resolve =>
-        setTimeout(() => resolve({ error: { message: 'Tiempo de espera agotado. Verifica tu conexión.' } }), 10000)
+        setTimeout(() => resolve({ error: { message: 'Tiempo de espera agotado. Verifica tu conexión.' } }), 30000)
       )
       const { error } = await Promise.race([
         supabase.from('appointments').insert({
@@ -359,18 +359,6 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
               <div>
                 <p className="text-sm font-semibold mb-2" style={{ color: '#2D2B3D' }}>Modalidad</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setModality('online')}
-                    className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer"
-                    style={{
-                      background: modality === 'online' ? 'rgba(13,110,253,0.08)' : '#F9F9FF',
-                      border:     `1.5px solid ${modality === 'online' ? '#0D6EFD' : 'rgba(184,175,240,0.3)'}`,
-                      color:      modality === 'online' ? '#0D6EFD' : '#7A788F',
-                    }}
-                  >
-                    <Video size={15} /> En línea
-                  </button>
-
                   {presencialEnabled ? (
                     <button
                       onClick={() => setModality('presencial')}
@@ -391,6 +379,18 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
                       <span style={{ opacity: 0.8 }}>Solo en línea</span>
                     </div>
                   )}
+
+                  <button
+                    onClick={() => setModality('online')}
+                    className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer"
+                    style={{
+                      background: modality === 'online' ? 'rgba(13,110,253,0.08)' : '#F9F9FF',
+                      border:     `1.5px solid ${modality === 'online' ? '#0D6EFD' : 'rgba(184,175,240,0.3)'}`,
+                      color:      modality === 'online' ? '#0D6EFD' : '#7A788F',
+                    }}
+                  >
+                    <Video size={15} /> En línea
+                  </button>
                 </div>
 
                 <AnimatePresence>

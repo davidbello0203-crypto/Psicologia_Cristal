@@ -150,12 +150,13 @@ export default function DashboardPage() {
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('appointments')
       .select('*')
       .eq('client_id', user.id)
       .order('appointment_date', { ascending: false })
       .order('start_time', { ascending: false })
+    if (error) console.error('fetchAppointments error:', error)
     setAppointments(data ?? [])
     setLoading(false)
   }, [user, supabase])
@@ -183,8 +184,8 @@ export default function DashboardPage() {
   }, [profile])
 
   useEffect(() => {
-    if (!user || !profile) return   // esperar a que carguen ambos
-    if (profile.role === 'admin') return  // el otro effect redirige
+    if (!user) return
+    if (profile?.role === 'admin') return  // el otro effect redirige
     fetchAppointments()
     fetchNotifications()
     const channel = supabase
@@ -193,17 +194,17 @@ export default function DashboardPage() {
         event: '*',
         schema: 'public',
         table: 'appointments',
-        filter: `client_id=eq.${user?.id}`,
+        filter: `client_id=eq.${user.id}`,
       }, () => fetchAppointments())
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${user?.id}`,
+        filter: `user_id=eq.${user.id}`,
       }, () => fetchNotifications())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [user, profile, fetchAppointments, fetchNotifications, supabase])
+  }, [user, profile?.role, fetchAppointments, fetchNotifications, supabase])
 
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
