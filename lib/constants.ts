@@ -16,7 +16,7 @@ export const NAV_LINKS = [
   { label: 'Sobre mí', href: '#sobre-mi' },
   { label: 'Servicios', href: '#servicios' },
   { label: 'Formación', href: '#formacion' },
-  { label: 'Agendar', href: '#consulta' },
+  { label: 'Agendar', href: '/dashboard' },
 ]
 
 export interface Service {

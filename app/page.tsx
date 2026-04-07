@@ -8,8 +8,6 @@ import { FormacionSection } from '@/components/sections/FormacionSection'
 import { PorQueConmigoSection } from '@/components/sections/PorQueConmigoSection'
 import { ProcesoAtencionSection } from '@/components/sections/ProcesoAtencionSection'
 import { FAQSection } from '@/components/sections/FAQSection'
-import { ConsultaSection } from '@/components/sections/ConsultaSection'
-
 export default function HomePage() {
   return (
     <>
@@ -22,7 +20,6 @@ export default function HomePage() {
         <PorQueConmigoSection />
         <ProcesoAtencionSection />
         <FAQSection />
-        <ConsultaSection />
       </main>
       <Footer />
       <FloatingBookingButton />
