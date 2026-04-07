@@ -106,9 +106,7 @@ export function HeroSection() {
             {/* CTAs */}
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
               <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/dashboard"
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full font-body font-semibold text-white text-base transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                 style={{
                   background: 'linear-gradient(135deg, #0D6EFD 0%, #B8AFF0 100%)',
@@ -123,7 +121,7 @@ export function HeroSection() {
                   e.currentTarget.style.boxShadow = '0 8px 30px rgba(13,110,253,0.3)'
                 }}
               >
-                Escríbeme para agendar
+                Agendar cita
               </a>
               <a
                 href="#sobre-mi"
