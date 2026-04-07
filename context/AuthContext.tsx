@@ -81,10 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, fetchProfile])
 
   const signOut = async () => {
-    await Promise.race([
-      fetch('/api/signout', { method: 'POST' }),
-      new Promise(resolve => setTimeout(resolve, 4000)),
-    ])
+    await supabase.auth.signOut()
   }
 
   return (

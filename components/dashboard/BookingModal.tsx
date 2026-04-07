@@ -125,6 +125,13 @@ export function BookingModal({ onClose, onSuccess, isFirstSession, initialDate }
     setSubmitting(true)
     setSubmitError(null)
     try {
+      // Asegurar que la sesión es válida antes del insert
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setSubmitError('Tu sesión expiró. Por favor recarga la página e inicia sesión de nuevo.')
+        setSubmitting(false)
+        return
+      }
       const h       = parseInt(selSlot.split(':')[0])
       const endTime = `${String(h + 1).padStart(2,'0')}:00:00`
       const timeoutPromise = new Promise<{ error: { message: string } }>(resolve =>

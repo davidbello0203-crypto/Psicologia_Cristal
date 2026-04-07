@@ -255,6 +255,12 @@ export default function DashboardPage() {
     return null
   }
 
+  // No session — redirect to login
+  if (!loading && !user) {
+    window.location.href = '/login'
+    return null
+  }
+
   const upcoming = appointments.filter((a) => a.status === 'pending' || a.status === 'confirmed')
   const past = appointments.filter((a) => a.status === 'completed' || a.status === 'cancelled' || a.status === 'no_show')
   const nextAppt = upcoming[upcoming.length - 1]
